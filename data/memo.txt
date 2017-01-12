@@ -1,0 +1,295 @@
+component R(1,2)
+{
+  param registance  // ex. 100Kohm
+  param package     // ex. 1608, lead0.5W
+  param error       // ex. 5%
+}
+
+component C(1,2)
+{
+  param capacitance
+  param package
+  param voltage
+  param grade
+}
+
+component L(1,2)
+{
+  param inductance
+  param package
+  param esr
+}
+
+component LTC6993IS6_1( TRG, GND, SET, DIV, V+, OUT )
+{
+
+}
+
+module OneShotPulse3Sec( VCC, GND, TRG, OUT )
+{
+  device IC as LTC6993IS6_1
+  device passCon as C(0.01u, 1608, 50V, X5R)
+  device Rset as R(576K,1608,1%)
+  device RdivHi as R(681K,1608,1%)
+  device RdivLo as R(1000K,1608,1%)
+
+  IC.GND - 1.passCon.2 - VCC
+  IC.GND - GND
+  IC.SET - 1.Rset.2 - GND
+  IC.DIV - ( 1.RdivHi.2 - VCC ), ( 1.RdivLo.2 - GND )
+
+  IC.DIV - ( 1.RdivHi.2 - VCC ), ( 1.RdivLo.2 - GND )
+//  VCC - 1.RdivHi.2 - DIV.IC.DIV - 1.RdivLo.2 - GND // こっちの書き方でもOK
+
+  IC.DIV - 1.RdivHi.2 - VCC |
+         - 1.RdivLo.2 - GND;
+
+  IC.V+ - VCC
+  IC.OUT - OUT
+}
+
+component NpnTransistor(E,C,B)
+{
+  param type
+}
+
+component ZenerDiode(A,K)
+{
+  param type
+}
+
+module EmgDetection( VCC, GND, IN, OUT )
+{
+  device ZD as ZenerDiode{DDZ9701-7}
+  device baseR as R {100K, 1608, 5%}
+  device baseC as C {0.1u, 1608, 50V, X5R}
+  device collR as R {10K, 1608, 5%}
+  device Tr as NpnTransistor {BC846ALT1G}
+/*
+  defdev $r100k as R{100K, 1608, 5%} // は必ず"$"まり
+  module r100k expand R{100K, 1608, 5%}
+  let r100k = R{100K, 1608, 5%}
+*/
+
+  IN - (K.ZD - GND) , 1.baseR
+  baseR.2 - (1.baseC.2 - GND) , B.Tr
+  VCC - 1.collR.2 - C.Tr, OUT
+  Tr.E - GND
+}
+
+module EmgOneShot( VCC, GND, IN, OUT )
+{
+  module detect as EmgDetection
+  module oneshot as OneShotPulse3Sec
+
+  GND - GND.detect , GND.oneshot
+  VCC - VCC.detect , VCC.oneshot
+
+  detect.OUT - oneshot.TRG
+  IN - detect.IN
+  oneshot.OUT - OUT
+}
+
+/*
+  接続先をあらかじめ決めてしまう。
+  device pulldownR as R(100K, 1608, 10%)[_,GND] // pin2が最初からGNDにつながる
+    ...
+  Fet.G - 1.pulldownR // プルダウン抵抗の先にGNDが最初からつながっている
+
+
+  同じ部品をn個使う
+  device pulldownR* as R(100K, 1608, 10%)[_,GND] // pin2が最初からGNDにつながっている抵抗(pulldownR0～pulldownRn)
+    ...
+  Fet1.G - 1.pulldownR1
+  Fet2.G - 1.pulldownR2
+  Fet3.G - 1.pulldownR3
+
+
+  同じモジュールをn個使う
+  module PhotoIsolation( VCC, GND, ISOGND, IN, OUT )
+  {
+    ...
+  }
+  module phIso* as PhotoIsolation[VCC,GND,ISOGND,_,_]  // 電源とGNDと絶縁GNDを接続済みの光アイソレータがn個
+    ...
+  うーん、どうやって記述しよう？
+  これ、バスをどう書くかって問題かな？
+  phIso<0..10>みたいな書き方？例えば
+    Micon.DIO<0..9> - phIso<10..19>.IN
+  これは、以下のように展開される
+    Micon.DIO0 - phIso10.IN
+    Micon.DIO1 - phIso11.IN
+              ...
+    Micon.DIO8 - phIso18.IN
+    Micon.DIO9 - phIso19.IN
+
+  おなじように
+    Micon.GND<0..2> - GND
+  これは、以下のように展開される
+    Micon.GND0 - GND
+    Micon.GND1 - GND
+    Micon.GND2 - GND
+*/
+
+/*
+  In // ハイインピーダンスな端子
+  Out // ローインピーダンスな端子
+  Bidir // 双方向
+  Tristate // トライステート
+  Passive // 受動素子
+  PowerIn // 電源入力
+  PowerOut // 電源出力
+  OpenC // オープンコレクタ・ドレイン
+  OpenE // オープンエミッタ・ソース
+  Nc // 未接続
+  Undef // 未定義
+
+  型の定義とconnceptが書ければいいんじゃないか？
+*/
+
+/*
+  型みたいな概念があるといいかも。
+  enum ChipPackage
+  {
+    "3216",
+    "2012",
+    "1608",
+    "1005",
+    "0603"
+  }
+
+  enum CerCapGrade
+  {
+    "X7R",
+    "X5R",
+    "Y5V",
+    "C0G",
+    "F",
+    "B"
+  }
+
+  数字にはSI接頭辞の使用を認めたい
+  f フェムト
+  p ピコ
+  n ナノ
+  u マイクロ
+  m ミリ
+  K キロ
+  M メガ
+  G ギガ
+  T テラ
+  P ペタ
+  あと、パーセント%
+*/
+
+とりあえず、最低限の言語仕様でKiCad用のネットリストを吐くコンパイラ（トランスレータ？）を作りたい。
+
+KiCadのネットリストに必要な要素は
+* ソースファイル名
+* タイムスタンプ
+* コンポーネントの
+** 参照名(ref)
+** ライブラリ名（？）
+** ピン番号(!)
+** ピン名
+** ピンのタイプ(!undefでいいんじゃね…？)
+
+言語の名前はI/1(アイスラッシュワンにしよう)
+拡張子は*.i1
+
+部品を定義するdefpart
+
+defpart 部品型番 (ピン番号:ピン名, ...)
+{
+  ref 参照名;
+  param パラメータ名1
+  param パラメータ名2
+   ...
+}
+
+モジュールを定義するmodule
+
+defmodule モジュール名(ピン番号:ピン名, ...)
+{
+  部品と結線について書く
+}
+
+part インスタンス名 as 部品型番{パラメータ1,パラメータ2,...};
+module インスタンス名 as モジュール名{パラメータ1,パラメータ2,...};
+
+defpart R(1:1,2:2)
+{
+  ref R;
+  param registance  // ex. 100Kohm
+  param package     // ex. 1608, lead0.5W
+  param error       // ex. 5%
+}
+
+defpart CONN2(1:1,2:2)
+{
+  ref CN;
+  param type;
+}
+
+defpart CONN3(1:1,2:2,3:3)
+{
+  ref CN;
+  param type;
+}
+
+defpart PHOTOCLP(1:A, 3:K, 4:E, 6:C)
+{
+  ref PH;
+  param type;
+}
+
+defmodule photoIso(VCC,IN,OUT,ISOVCC,ISOGND)
+{
+  part phClp as PHOTOCLP{"TLP183"};
+  part anodeR as R{"10K","1608","5%""};
+  part collR as R{"10K","1608","5%""};
+
+  VCC - 1.anodeR.2 - A.phClp.K - IN;
+  ISOVCC - 1.collR.2 - OUT;
+  OUT - C.phClp.K - GND;
+}
+
+defmodule powerLed(VCC,GND)
+{
+  part r as R{"1K","1608","5%""};
+  part led as LED{"BR1111C"};
+
+  VCC - 1.R.2 - A.led.K - GND;
+}
+
+defmodule ledTr(VCC,GND,IN)
+{
+  part ledR as R{"100","1608","5%""};
+  part baseR as R{"1K","1608","5%""};
+  part led as LED{"PG1111C"};
+  part npn as NPN{"2SC1815"};
+
+  VCC - 1.ledR.2 - A.led.K - C.npn.E - GND;
+  IN - 1.baseR.2 - B.npn;
+}
+
+defmodule main()
+{
+  part cn as CONN3{"B3B-EH"};
+
+  module pLed as powerLed;
+  module gLed as ledTr;
+
+  cn.1 - VCC.prLed;
+  cn.1 - VCC.gLed;
+  cn.3 - GND.pLed;
+  cn.3 - GND.gLed;
+  cn.2 - IN.gLed;
+}
+
+言語名はEisler(アイスラー)
+拡張子は*.eis
+Eisler使いはEislerian(アイスラリアン)
+
+どこにも接続しない端子は「nc」に接続する。
+これを忘れるとコンパイルエラー（ワーニング？）

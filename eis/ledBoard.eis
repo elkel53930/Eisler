@@ -1,0 +1,42 @@
+import passive;
+import discrete;
+
+defpart CONN4(1:1,2:2,3:3,4:4)
+{
+  ref CN;
+  param type;
+}
+
+defmodule powerLed(VCC,GND)
+{
+  part r as R{"1K","1608","5%"};
+  part redLed as LED{"BR1111C"};
+
+  VCC - 1.R.2 - A.redLed.K - GND;
+}
+
+defmodule ledTr(VCC,GND,IN)
+{
+  part ledR as R{"100","1608","5%"};
+  part baseR as R{"1K","1608","5%"};
+  part grnLed as LED{"PG1111C"};
+  part npn as NPN{"2SC1815"};
+
+  VCC - 1.ledR.2 - A.grnLed.K - C.npn.E - GND;
+  IN - 1.baseR.2 - B.npn;
+}
+
+defmodule main()
+{
+  part cn as CONN4{"B4B-EH"};
+
+  module pLed as powerLed;
+  module gLed as ledTr;
+
+  cn.1 - VCC.prLed;
+  cn.1 - VCC.gLed;
+  cn.2 - IN.gLed;
+  cn.3 - nc;
+  cn.4 - GND.pLed;
+  cn.4 - GND.gLed;
+}

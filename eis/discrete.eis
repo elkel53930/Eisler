@@ -1,0 +1,47 @@
+defpart NPN(1:E,2:C,3:B)
+{
+  ref "Q";
+  param type as string;  // ex. "2SC1815"
+}
+
+defpart PNP(1:E,2:C,3:B)
+{
+  ref "Q";
+  param type as string;  // ex. "2SA1015"
+}
+
+defpart NchFET(1:S,2:D,3:G)
+{
+  ref "Q";
+  param type as string;
+}
+
+defpart PchFET(1:S,2:D,3:G)
+{
+  ref "Q";
+  param type as string;
+}
+
+defpart LED(1:A,2:K)
+{
+  ref "LD";
+  param type as string;
+}
+
+defpart Diode(1:A,2:K)
+{
+  ref "D";
+  param type as string;
+}
+
+defpart ZenerDiode(1:A,2:K)
+{
+  ref "D";
+  param type as string;
+}
+
+defpart SchottkyDiode(1:A,2:K)
+{
+  ref "D";
+  param type as string;
+}

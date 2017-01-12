@@ -1,0 +1,77 @@
+import passive;
+import discrete;
+
+defpart TA78033AF(1:VIN, 2:VOUT, 3:GND)
+{
+  ref "IC";
+}
+
+defpart ADM3202(1:C1p, 2:Vp, 3:C1m, 4:C2p, 5:C2m, 6:Vm, 7:T2OUT,
+                8:R2IN, 9:R2OUT, 10:T2IN, 11:T1IN, 12:R1OUT, 13:R1IN, 14:T1OUT, 15:GND, 16VCC)
+{
+  ref "IC";
+}
+
+defpart CN2(1:1,2:2)
+{
+  ref "CN";
+  param type as string;
+}
+
+defmodule POWERSOURCE3R3V(VIN, GND, VOUT)
+{
+  part reg as TA78033AF(VIN,VOUT,GND);
+  part cin as C(VIN,GND){"0.1u","1608","50V","X5R"};
+  part cout as C(VIN,GND){"1u","1608","16V","X5R"};
+}
+
+defmodule TTLTO232(VCC, GND, TLLIN,TTLOUT,232IN,232OUT)
+{
+  part adm as ADM3202;
+  part c* as C{"0.1u","1608","50V","X5R"};
+
+  // パスコン
+  adm.VCC - 1.c4.2 - GND;
+  adm.C1p - 1.c1.2 - C1m.adm;
+  adm.C2p - 1.c2.2 - C2m.adm;
+  adm.VCC - 1.c3.2 - Vp.adm;
+  adm.Vm  - 1.c5.2 - GND;
+
+  TTLIN - T1IN.adm;
+  TTLOUT - R1OUT.adm;
+  232IN - R1IN.adm;
+  232OUT - T1OUT.adm;
+
+  adm.VCC - VCC;
+  adm.GND - GND;
+  adm.T2IN - GND;
+  adm.R2IN - GND;
+  adm.T2OUT - nc;
+  adm.R2OUT - nc;
+}
+
+defmodule main()
+{
+  wire VCC;
+  wire GND;
+  part cn* as CN{ type = "B2B-EH-A(LF)" };
+  part ledR as R{"100K","1608","5%"};
+  pard led as LED("BR1111C");
+  module converter as TTLTO232{VCC,GND,_,_,_,_};
+  module power as POWERSOURCE3R3V{_,GND,VCC};
+
+  // cn1:電源コネクタ
+  cn1.1 - power.VIN;
+  cn1.2 - GND;
+
+  // cn2:TTL側のコネクタ
+  c2.1 - converter.TTLIN;
+  c2.2 - converter.TTLOUT;
+
+  // cn3:232C側コネクタ
+  c3.1 - converter.232IN;
+  c3.2 - converter.232.OUT;
+
+  // 電源LED
+  VCC - 1.ledR.2 - A.led.K - GND;
+}
