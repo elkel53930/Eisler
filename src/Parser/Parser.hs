@@ -27,14 +27,15 @@ data Port = Port String deriving Show
 data Part = Part String deriving Show
 data Module = Module String deriving Show
 
-data SourceElement = ImportSource { fileName :: String}
+data SourceElement = ImportSource { fileName :: String
+                                  , importSrcPos :: SourcePos}
                    | DefinePart { defPartName :: String
-                                , defPartPorts :: [(Int,String)]
+                                , defPartPorts :: [(Int,String,SourcePos)]
                                 , defPartRef :: String
                                 }
                    | DefineModule { defModuleName :: String
-                                  , defModulePorts :: [(Int,String)]
-                                  , defModuleElements :: [ModuleElement]
+                                  , defModPorts :: [(Int,String,SourcePos)]
+                                  , defModElements :: [(ModuleElement,SourcePos)]
                                   } deriving Show
 
 data ModuleElement = DeclarePart Comp Part
@@ -62,10 +63,11 @@ eislerFile = many ( try importSrc <|>
 -}
 importSrc :: Parser SourceElement
 importSrc = do
+  p<-getPosition
   stringSp kwdImport
   s <- strLit
   charSp ';'
-  return ImportSource {fileName = s}
+  return ImportSource {fileName = s, importSrcPos = p}
 
 {-
   module/part define
@@ -85,8 +87,8 @@ defModule = do
                   try conExpr)
   charSp '}'
   return DefineModule{ defModuleName = m
-                     , defModulePorts = ps
-                     , defModuleElements = elems}
+                     , defModPorts = ps
+                     , defModElements = elems}
 
 defPart :: Parser SourceElement
 defPart = do
@@ -109,41 +111,45 @@ partRef = do
   charSp ';'
   return result
 
-port :: Parser (Int,String)
+port :: Parser (Int,String,SourcePos)
 port = do
+  p <- getPosition
   n <- intLit
   charSp ':'
   s <- iden
-  return (n,s)
+  return (n,s,p)
 
 {-
   part/module/wire declare
 -}
 
-decPart :: Parser ModuleElement
+decPart :: Parser (ModuleElement,SourcePos)
 decPart = do
+  pos <- getPosition
   stringSp kwdDecPart
   c <- iden
   stringSp kwdAs
   p <- iden
   charSp ';'
-  return $ DeclarePart (Comp c) (Part p)
+  return $ ( (DeclarePart (Comp c) (Part p)), pos)
 
-decModule :: Parser ModuleElement
+decModule :: Parser (ModuleElement,SourcePos)
 decModule = do
+  pos <- getPosition
   stringSp kwdDecModule
   c <- iden
   stringSp kwdAs
   m <- iden
   charSp ';'
-  return $ DeclareModule (Comp c) (Module m)
+  return $ ((DeclareModule (Comp c) (Module m)), pos)
 
-decWire :: Parser ModuleElement
+decWire :: Parser (ModuleElement,SourcePos)
 decWire = do
+  pos <- getPosition
   stringSp kwdDecWire
   w <- iden
   charSp ';'
-  return $ DeclareWire w
+  return $ ((DeclareWire w),pos)
 
 {-
   ConExpr
@@ -202,13 +208,14 @@ bCnct = do
   charSp '-'
   return result
 
-conExpr :: Parser ModuleElement
+conExpr :: Parser (ModuleElement,SourcePos)
 conExpr = do
+  pos <- getPosition
   r  <- rCnct
   bs <- many $ try bCnct
   l <- lCnct
   charSp ';'
-  return $ ConExpr r bs l
+  return $ ((ConExpr r bs l),pos)
 
 {-
   Common
