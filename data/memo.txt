@@ -1,4 +1,4 @@
-component R(1,2)
+﻿component R(1,2)
 {
   param registance  // ex. 100Kohm
   param package     // ex. 1608, lead0.5W
@@ -289,7 +289,6 @@ defmodule main()
 
 言語名はEisler(アイスラー)
 拡張子は*.eis
-Eisler使いはEislerian(アイスラリアン)
 
 どこにも接続しない端子は「nc」に接続する。
 これを忘れるとコンパイルエラー（ワーニング？）
