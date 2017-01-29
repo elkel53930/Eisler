@@ -6,18 +6,15 @@ import Text.ParserCombinators.Parsec
 import System.Environment
 import System.IO
 import qualified Combine as Comb
-import qualified Data.Time as Time
 
 main = do
   args <- getArgs
-  now <- Time.getZonedTime
-  putStrLn $ show now
   case (length args) of
     0 -> putStrLn "Eisler translator to PADS Logic netlist."
     otherwise -> translate args
 
 translate args = do
-  -- IO()
+  -- IO
   let sourceName = head args
   handle <- openFile sourceName ReadMode
   source <- hGetContents handle
@@ -30,6 +27,8 @@ translate args = do
     let (decParts,conExprs) = S.divideMod modElems
     let cncts = S.expansionaCnct conExprs
     ports <- S.convertToPort decParts defParts cncts
-    Right $ Comb.adds [] ports of
-      Right r -> print r
+    let refed = S.referencing ports
+    let combined = Comb.adds [] refed
+    Right $ O.outputPart refed of
+      Right r -> putStrLn r
       Left l -> putStrLn l

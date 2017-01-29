@@ -140,7 +140,39 @@ retraceComp decParts defParts cnct = do
   where
     Pin compIden portIden = cnct
 
---collectUpPort :: [(Port,Port)] -> Maybe Wire
---collectUpPort ((pl,pr):ps) =
+ordRef :: Port -> Port -> Ordering
+ordRef x y = compare (thd3 x) (thd3 y)
 
---eqPortPort (x1,x2) (y1,y2) = (x1==y1&&x2==y2) || (x1==y2&&x2==y1)
+eqRef :: Port -> Port -> Bool
+eqRef pl pr = (==EQ) $ ordRef pl pr
+
+referencing :: [(Port,Port)] -> [(Port,Port)]
+referencing ps = map (renameRef dic) ps
+  where
+    dic = termRef
+        . groupBy eqRef
+        . sortBy ordRef
+        . nubBy (\x y -> fst3 x == fst3 y)
+        $ expandTuple ps
+
+termRef :: [[Port]] -> [(CompName,Reference)]
+termRef [] = []
+termRef (ps:pss) = termRef_ ps 1 ++ (termRef pss)
+
+termRef_ :: [Port] -> Int -> [(CompName,Reference)]
+termRef_ [] _ = []
+termRef_ ((c,_,r):ps) n = (c,r ++ (show n)) : (termRef_ ps $ n + 1)
+
+expandTuple :: [(a,a)] -> [a]
+expandTuple [] = []
+expandTuple ((xl,xr):xs) = xl : xr : expandTuple xs
+
+renameRef :: [(CompName,Reference)] -> (Port,Port) -> (Port,Port)
+renameRef dic (p1,p2) = (renameRefSingle dic p1, renameRefSingle dic p2)
+
+renameRefSingle :: [(CompName,Reference)] -> Port -> Port
+renameRefSingle [] port = port
+renameRefSingle ((c,r):ts) port@(pc,pp,pr) =
+  if pc == c
+    then (pc,pp,r)
+    else renameRefSingle ts port
