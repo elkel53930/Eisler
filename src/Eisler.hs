@@ -28,7 +28,10 @@ translate args = do
     let cncts = S.expansionaCnct conExprs
     ports <- S.convertToPort decParts defParts cncts
     let refed = S.referencing ports
-    let combined = Comb.adds [] refed
-    Right $ O.outputPart refed of
-      Right r -> putStrLn r
+    Right $ (Comb.adds [] refed, refed) of
+      Right (combined,refed) -> do
+        putStrLn $ O.header
+        putStrLn $ O.outputPart refed
+        putStrLn $ O.outputNet combined
+        putStrLn "*END*     OF ASCII OUTPUT FILE"
       Left l -> putStrLn l

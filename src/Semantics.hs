@@ -8,7 +8,7 @@ import Common
 
 type Module = (ModuleIden, [ Wire ])
 type Wire = (WireName, [Port])
-type Port = (CompName, PortNum, Reference)
+type Port = (CompName, PortNum, Reference, PartName)
 type WireName = String
 type ErrorMsg = String
 
@@ -136,12 +136,12 @@ retraceComp decParts defParts cnct = do
   partIden <- searchComp compIden decParts
   partInfo <- searchPart partIden defParts
   portIntLit <- searchPort portIden (fst partInfo)
-  Right (fst compIden, fst portIntLit, snd partInfo)
+  Right (fst compIden, fst portIntLit, snd partInfo, fst partIden)
   where
     Pin compIden portIden = cnct
 
 ordRef :: Port -> Port -> Ordering
-ordRef x y = compare (thd3 x) (thd3 y)
+ordRef x y = compare (thd4 x) (thd4 y)
 
 eqRef :: Port -> Port -> Bool
 eqRef pl pr = (==EQ) $ ordRef pl pr
@@ -152,7 +152,7 @@ referencing ps = map (renameRef dic) ps
     dic = termRef
         . groupBy eqRef
         . sortBy ordRef
-        . nubBy (\x y -> fst3 x == fst3 y)
+        . nubBy (\x y -> fst4 x == fst4 y)
         $ expandTuple ps
 
 termRef :: [[Port]] -> [(CompName,Reference)]
@@ -161,7 +161,7 @@ termRef (ps:pss) = termRef_ ps 1 ++ (termRef pss)
 
 termRef_ :: [Port] -> Int -> [(CompName,Reference)]
 termRef_ [] _ = []
-termRef_ ((c,_,r):ps) n = (c,r ++ (show n)) : (termRef_ ps $ n + 1)
+termRef_ ((c,_,r,_):ps) n = (c,r ++ (show n)) : (termRef_ ps $ n + 1)
 
 expandTuple :: [(a,a)] -> [a]
 expandTuple [] = []
@@ -172,7 +172,7 @@ renameRef dic (p1,p2) = (renameRefSingle dic p1, renameRefSingle dic p2)
 
 renameRefSingle :: [(CompName,Reference)] -> Port -> Port
 renameRefSingle [] port = port
-renameRefSingle ((c,r):ts) port@(pc,pp,pr) =
+renameRefSingle ((c,r):ts) port@(pc,pp,pr,ppa) =
   if pc == c
-    then (pc,pp,r)
+    then (pc,pp,r,ppa)
     else renameRefSingle ts port

@@ -46,3 +46,7 @@ toSmall c =
 alphabetSmall x = do
   c <- alphabet x
   toSmall c
+
+
+main = do
+  sequence_ [print 123,putStrLn "hello"]

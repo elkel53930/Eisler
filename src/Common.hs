@@ -45,6 +45,6 @@ pickupBy f x xs =
 pickup :: Eq a => a -> [a] -> Maybe (a,[a])
 pickup = pickupBy (==)
 
-fst3 (x,_,_) = x
-snd3 (_,x,_) = x
-thd3 (_,_,x) = x
+fst4 (x,_,_,_) = x
+snd4 (_,x,_,_) = x
+thd4 (_,_,x,_) = x
