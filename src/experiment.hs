@@ -50,3 +50,11 @@ alphabetSmall x = do
 
 main = do
   sequence_ [print 123,putStrLn "hello"]
+
+data Parent = Child1 Int | Child2 String deriving Show
+
+pickup :: [Parent] -> [Int]
+pickup parents =
+  map (\(Child1 x) -> x) $ filter (\x -> case x of
+    Child1 _ -> True
+    otherwise -> False) parents

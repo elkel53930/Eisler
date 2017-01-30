@@ -1,6 +1,7 @@
 module Parser where
 
 import Text.ParserCombinators.Parsec
+import System.IO
 
 data Cnct = Pin CompIden PortIden deriving Show
 data BCnct = BPin PortIden CompIden PortIden deriving Show
@@ -23,7 +24,8 @@ type DefineModule = (ModuleIden, ([(PortIntLit,PortIden)], [ModuleElement]))
 type DeclarePart = (CompIden, PartIden)
 type ConnectExpression = (Cnct, [BCnct], Cnct)
 
-data SourceElement = DefPart DefinePart
+data SourceElement = Import FilePath
+                   | DefPart DefinePart
                    | DefMod DefineModule deriving Show
 
 data ModuleElement = DecPart DeclarePart
@@ -33,14 +35,44 @@ kwdDefModule = "defmodule"
 kwdDefPart = "defpart"
 kwdDecPart = "part"
 kwdAs = "as"
+kwdImport = "import"
 
-parseEisFile filename src =
-  case parse eislerFile filename src of
-    Right parsed -> Right parsed
-    Left err -> Left $ show err
+parseEisFile :: FilePath -> IO(Either String [SourceElement])
+parseEisFile filepath = parseEisFiles [filepath] []
+
+parseEisFiles :: [FilePath] -> [SourceElement] -> IO(Either String [SourceElement])
+parseEisFiles [] srcElems = return $ Right srcElems
+parseEisFiles (file:fs) srcElems = do
+  handle <- openFile file ReadMode
+  source <- hGetContents handle
+  case parse eislerFile file source of
+    Right parsed -> do
+      childlenResult <- parseEisFiles childlen elements
+      case childlenResult of
+        Right childlenElements -> parseEisFiles fs childlenElements
+        Left err -> return . Left $ show err
+      where
+        childlen = pickupImport (parsed++srcElems)
+        elements = pickupNotImport (parsed++srcElems)
+    Left err -> return . Left $ show err
+
+
+pickupImport :: [SourceElement] -> [FilePath]
+pickupImport srcElems =
+  map (\(Import file) -> file) $ filter (\x -> case x of
+    Import file -> True
+    otherwise -> False) srcElems
+
+pickupNotImport :: [SourceElement] -> [SourceElement]
+pickupNotImport srcElems =
+  filter (\x -> case x of
+    Import file -> False
+    otherwise -> True) srcElems
+
 
 eislerFile :: Parser [SourceElement]
-eislerFile = many ( try defPart <|>
+eislerFile = many ( try imp <|>
+                    try defPart <|>
                     defModule )
 {-
   module/part define
@@ -70,6 +102,12 @@ defPart = do
   ref <- partRef
   charSp '}'
   return $ DefPart (p, (ps, ref))
+
+imp :: Parser SourceElement
+imp = do
+  stringSp kwdImport
+  result <- strLit
+  return $ Import result
 
 partRef :: Parser String
 partRef = do

@@ -1,0 +1,2 @@
+defpart LED(1:A  2:K) {ref "LD";}
+defpart TA7805F(1:IN 2:GND 3:OUT){ref "IC";}
