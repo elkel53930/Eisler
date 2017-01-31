@@ -47,7 +47,6 @@ alphabetSmall x = do
   c <- alphabet x
   toSmall c
 
-
 main = do
   sequence_ [print 123,putStrLn "hello"]
 
@@ -58,3 +57,6 @@ pickup parents =
   map (\(Child1 x) -> x) $ filter (\x -> case x of
     Child1 _ -> True
     otherwise -> False) parents
+
+
+newtype CharList = CharList {getCharList :: [Char]} deriving (Eq,Show)

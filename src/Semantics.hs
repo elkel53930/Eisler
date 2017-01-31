@@ -32,15 +32,15 @@ getNames [] = []
 getNames (t:ts) = name ++ getNames ts where
   name =
     case t of
-      DefPart (pname, (_, _)) -> [pname]
-      DefMod (mname, (_, m)) -> mname : getNamesFromModule m
+      DefPart (pname, (_, _)) -> [getPartIden pname]
+      DefMod (mname, (_, m)) -> (getModuleIden mname) : getNamesFromModule m
 
 -- [ModuleElement]内で重複している識別子の一覧を返す
 getNamesFromModule :: [ModuleElement] -> [(String,SourcePos)]
 getNamesFromModule [] = []
 getNamesFromModule (t:ts) =
   case t of
-    DecPart (cname, _) -> cname : (getNamesFromModule ts)
+    DecPart (cname, _) -> (getCompIden cname) : (getNamesFromModule ts)
     ConExpr _ -> getNamesFromModule ts
 
 getOverlapsError :: [(String, SourcePos)] -> String
@@ -70,7 +70,7 @@ divideMod ((ConExpr c):ts) = (ps,c:cs) where
 
 searchMod :: [DefineModule] -> ModuleName -> Result DefineModule
 searchMod defMods name =
-  case lookupWith eqFst name defMods of
+  case lookupWith eqModuleIden name defMods of
     Just defmod -> Right defmod
     Nothing -> Left $ "Module '" ++ name ++ "' is not defined."
 
@@ -107,20 +107,20 @@ convertToPort decParts defParts ((cl,cr):cs) = do
 
 
 searchComp :: CompIden -> [DeclarePart] -> Result PartIden
-searchComp (compName, srcPos) decParts =
-  case lookupWith eqFst compName decParts >>= justSnd of
+searchComp (CompIden (compName, srcPos)) decParts =
+  case lookupWith eqCompIden compName decParts >>= justSnd of
     Just name -> Right name
     Nothing -> Left $ (show srcPos) ++ "\n\tComponent '" ++ compName ++ "' is not declared."
 
 searchPart :: PartIden -> [DefinePart] -> Result ([(PortIntLit,PortIden)],Reference)
-searchPart (partName,srcPos) defParts =
-  case lookupWith eqFst partName defParts >>= justSnd of
+searchPart (PartIden (partName,srcPos)) defParts =
+  case lookupWith eqPartIden partName defParts >>= justSnd of
     Just partInfo -> Right partInfo
     Nothing -> Left $ (show srcPos) ++ "\n\tPart '" ++ partName ++ "' is not defined."
 
 searchPort :: PortIden -> [(PortIntLit,PortIden)] -> Result PortIntLit
-searchPort (portName,srcPos) partInfos =
-  case lookupWith_ eqFst portName partInfos >>= justFst of
+searchPort (PortIden (portName,srcPos)) partInfos =
+  case lookupWith_ eqPortIden portName partInfos >>= justFst of
     Just portIntLit -> Right portIntLit
     Nothing -> Left $ (show srcPos) ++ "\n\tPort '" ++ portName ++ "' is not defined."
 
@@ -136,7 +136,7 @@ retraceComp decParts defParts cnct = do
   partIden <- searchComp compIden decParts
   partInfo <- searchPart partIden defParts
   portIntLit <- searchPort portIden (fst partInfo)
-  Right (fst compIden, fst portIntLit, snd partInfo, fst partIden)
+  Right (fst $ getCompIden compIden, fst $ getPortIntLit portIntLit, snd partInfo, fst $ getPartIden partIden)
   where
     Pin compIden portIden = cnct
 

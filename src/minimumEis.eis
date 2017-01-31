@@ -1,5 +1,8 @@
 import "Basic.eis"
 
+defpart TA7805F(1:IN 2:GND 3:OUT){ref "IC";}
+defpart CONN2(1:_1 2:_2){ref "CN";}
+
 defmodule main()
 {
   part r as R;

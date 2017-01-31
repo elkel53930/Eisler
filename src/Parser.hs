@@ -6,13 +6,13 @@ import System.IO
 data Cnct = Pin CompIden PortIden deriving Show
 data BCnct = BPin PortIden CompIden PortIden deriving Show
 
-type PartIden = (PartName,SourcePos)
-type PortIntLit = (PortNum,SourcePos)
-type PortIden = (PortName,SourcePos)
-type ModuleIden = (ModuleName,SourcePos)
-type Reference = String
-type CompIden = (CompName,SourcePos)
+newtype PartIden = PartIden {getPartIden :: (PartName,SourcePos)} deriving(Show,Eq)
+newtype PortIntLit = PortIntLit {getPortIntLit :: (PortNum,SourcePos)} deriving(Show,Eq)
+newtype PortIden = PortIden {getPortIden :: (PortName,SourcePos)} deriving(Show,Eq)
+newtype ModuleIden = ModuleIden {getModuleIden :: (ModuleName,SourcePos)} deriving(Show,Eq)
+newtype CompIden = CompIden {getCompIden :: (CompName,SourcePos)} deriving(Show,Eq)
 
+type Reference = String
 type PartName = String
 type PortNum = Int
 type PortName = String
@@ -37,10 +37,15 @@ kwdDecPart = "part"
 kwdAs = "as"
 kwdImport = "import"
 
-parseEisFile :: FilePath -> IO(Either String [SourceElement])
+eqPartIden name (PartIden(partName,_)) = name == partName
+eqPortIden name (PortIden(portName,_)) = name == portName
+eqModuleIden name (ModuleIden(modName,_)) = name == modName
+eqCompIden name (CompIden(compName,_)) = name == compName
+
+parseEisFile :: FilePath -> IO(Either ParseError [SourceElement])
 parseEisFile filepath = parseEisFiles [filepath] []
 
-parseEisFiles :: [FilePath] -> [SourceElement] -> IO(Either String [SourceElement])
+parseEisFiles :: [FilePath] -> [SourceElement] -> IO(Either ParseError [SourceElement])
 parseEisFiles [] srcElems = return $ Right srcElems
 parseEisFiles (file:fs) srcElems = do
   handle <- openFile file ReadMode
@@ -50,11 +55,11 @@ parseEisFiles (file:fs) srcElems = do
       childlenResult <- parseEisFiles childlen elements
       case childlenResult of
         Right childlenElements -> parseEisFiles fs childlenElements
-        Left err -> return . Left $ show err
+        Left err -> return $ Left err
       where
         childlen = pickupImport (parsed++srcElems)
         elements = pickupNotImport (parsed++srcElems)
-    Left err -> return . Left $ show err
+    Left err -> return $ Left err
 
 
 pickupImport :: [SourceElement] -> [FilePath]
@@ -89,7 +94,7 @@ defModule = do
   elems <- many ( try decPart <|>
                   try conExpr)
   charSp '}'
-  return $ DefMod (m, (ps, elems))
+  return $ DefMod (ModuleIden m, (ps, elems))
 
 defPart :: Parser SourceElement
 defPart = do
@@ -101,7 +106,7 @@ defPart = do
   charSp '{'
   ref <- partRef
   charSp '}'
-  return $ DefPart (p, (ps, ref))
+  return $ DefPart (PartIden p, (ps, ref))
 
 imp :: Parser SourceElement
 imp = do
@@ -121,7 +126,7 @@ port = do
   n <- intLit
   charSp ':'
   s <- iden
-  return (n,s)
+  return (PortIntLit n,PortIden s)
 
 {-
   part/module/wire declare
@@ -134,7 +139,7 @@ decPart = do
   stringSp kwdAs
   p <- iden
   charSp ';'
-  return $ DecPart (c, p)
+  return $ DecPart (CompIden c, PartIden p)
 
 {-
   ConExpr
@@ -145,14 +150,14 @@ rCnctCompPort = do
   c <- iden
   char '.'
   p <- iden
-  return $ Pin c p
+  return $ Pin (CompIden c) (PortIden p)
 
 lCnctCompPort :: Parser Cnct
 lCnctCompPort = do
   p <- iden
   char '.'
   c <- iden
-  return $ Pin c p
+  return $ Pin (CompIden c) (PortIden p)
 
 bCnctCompPort :: Parser BCnct
 bCnctCompPort = do
@@ -161,7 +166,7 @@ bCnctCompPort = do
   c <- iden
   char '.'
   pr <- iden
-  return $ BPin pl c pr
+  return $ BPin (PortIden pl) (CompIden c) (PortIden pr)
 
 rCnct :: Parser Cnct
 rCnct = do

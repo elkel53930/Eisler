@@ -3,6 +3,13 @@ module Common where
 import Data.Tuple
 import Data.List
 
+lookupWith2 :: (a->Bool) -> [a] -> Maybe a
+lookupWith2 _ [] = Nothing
+lookupWith2 f (a:as) =
+  if f a
+    then Just a
+    else lookupWith2 f as
+
 lookupWith :: (c -> a ->Bool) -> c -> [(a,b)] -> Maybe (a,b)
 lookupWith _ _ [] = Nothing
 lookupWith f a ((x,y):ts) =
