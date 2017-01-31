@@ -4,10 +4,11 @@ import Parser
 import Text.ParserCombinators.Parsec
 import Control.Applicative
 import Data.List
+import qualified Data.Set as Set
 import Common
 
 type Module = (ModuleIden, [ Wire ])
-type Wire = (WireName, [Port])
+type Wire = (WireName, Set.Set Port)
 type Port = (CompName, PortNum, Reference, PartName)
 type WireName = String
 type ErrorMsg = String

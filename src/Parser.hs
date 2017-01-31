@@ -3,9 +3,12 @@ module Parser where
 import Text.ParserCombinators.Parsec
 import System.IO
 
-data Cnct = Pin CompIden PortIden deriving Show
-data BCnct = BPin PortIden CompIden PortIden deriving Show
+data Cnct = Pin CompIden PortIden
+          | Wire WireIden  deriving Show
+data BCnct = BPin PortIden CompIden PortIden
+           | BWire WireIden  deriving Show
 
+newtype WireIden = WireIden {getWireIden :: (WireName,SourcePos)} deriving(Show,Eq)
 newtype PartIden = PartIden {getPartIden :: (PartName,SourcePos)} deriving(Show,Eq)
 newtype PortIntLit = PortIntLit {getPortIntLit :: (PortNum,SourcePos)} deriving(Show,Eq)
 newtype PortIden = PortIden {getPortIden :: (PortName,SourcePos)} deriving(Show,Eq)
@@ -13,6 +16,7 @@ newtype ModuleIden = ModuleIden {getModuleIden :: (ModuleName,SourcePos)} derivi
 newtype CompIden = CompIden {getCompIden :: (CompName,SourcePos)} deriving(Show,Eq)
 
 type Reference = String
+type WireName = String
 type PartName = String
 type PortNum = Int
 type PortName = String
@@ -29,6 +33,7 @@ data SourceElement = Import FilePath
                    | DefMod DefineModule deriving Show
 
 data ModuleElement = DecPart DeclarePart
+                   | DecWire WireIden
                    | ConExpr ConnectExpression deriving Show
 
 kwdDefModule = "defmodule"
@@ -36,6 +41,7 @@ kwdDefPart = "defpart"
 kwdDecPart = "part"
 kwdAs = "as"
 kwdImport = "import"
+kwdDecWire = "wire"
 
 eqPartIden name (PartIden(partName,_)) = name == partName
 eqPortIden name (PortIden(portName,_)) = name == portName
@@ -91,8 +97,9 @@ defModule = do
   ps <- many port
   charSp ')'
   charSp '{'
-  elems <- many ( try decPart <|>
-                  try conExpr)
+  elems <- many ( try decWire <|>
+                  try decPart <|>
+                  conExpr)
   charSp '}'
   return $ DefMod (ModuleIden m, (ps, elems))
 
@@ -141,6 +148,13 @@ decPart = do
   charSp ';'
   return $ DecPart (CompIden c, PartIden p)
 
+decWire :: Parser ModuleElement
+decWire = do
+  stringSp kwdDecWire
+  w <- iden
+  charSp ';'
+  return . DecWire $ WireIden w
+
 {-
   ConExpr
 -}
@@ -159,6 +173,11 @@ lCnctCompPort = do
   c <- iden
   return $ Pin (CompIden c) (PortIden p)
 
+wire :: Parser Cnct
+wire = do
+  l <- iden
+  return $ Wire (WireIden l)
+
 bCnctCompPort :: Parser BCnct
 bCnctCompPort = do
   pl <- iden
@@ -168,18 +187,23 @@ bCnctCompPort = do
   pr <- iden
   return $ BPin (PortIden pl) (CompIden c) (PortIden pr)
 
+bWire :: Parser BCnct
+bWire = do
+  l <- iden
+  return $ BWire (WireIden l)
+
 rCnct :: Parser Cnct
 rCnct = do
-  result <- try rCnctCompPort
+  result <- try rCnctCompPort <|> wire
   charSp '-'
   return result
 
 lCnct :: Parser Cnct
-lCnct = try lCnctCompPort
+lCnct = try lCnctCompPort <|> wire
 
 bCnct :: Parser BCnct
 bCnct = do
-  result <- try bCnctCompPort
+  result <- try bCnctCompPort <|> bWire
   charSp '-'
   return result
 

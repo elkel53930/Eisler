@@ -1,21 +1,5 @@
-import "Basic.eis"
-
-defpart TA7805F(1:IN 2:GND 3:OUT){ref "IC";}
-defpart CONN2(1:_1 2:_2){ref "CN";}
-
 defmodule main()
 {
-  part r as R;
-  part c1 as C;
-  part c2 as C;
-  part led as LED;
-  part conn2 as CONN2;
-  part reg as TA7805F;
-
-  conn2._2 - IN.reg;
-  conn2._1 - GND.reg;
-
-  reg.OUT - _1.r._2 - A.led.K - GND.reg;
-  conn2._2 - _1.c1._2 - _1.conn2;
-  reg.OUT - _1.c2._2 - GND.reg;
+  wire VCC;
+  VCC - _1.r;
 }
