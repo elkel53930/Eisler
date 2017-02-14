@@ -1,4 +1,6 @@
 *.hi
 *.o
 *.exe
-doc/**/*.html
+*.tmp
+src/Eisler
+src/experiment.hs

@@ -1,86 +1,13 @@
-import Data.List
-
-type T = (Int,(Int,String))
-
-test = [ (1,(1,"1")), (2,(2,"2")), (3,(3,"3")), (4,(4,"4")), (5,(5,"5"))] :: [T]
-
-
-justFst (x,_) = Just x
-
---fn = lookup 1 test >>= (\(x,_) -> Just x) >>= (\x -> Just $ x*2)
-
-{-
-fn = do
-  a <- lookup 1 test
-  b <- justFst a
-  Just $ (*2) b
--}
-
-fn = do
-  b <- lookup 1 test >>= justFst
-  Just $ (*2) b
-
-f2 :: Int -> Maybe Int
-f2 x = Just x
-f3 x = Nothing
-f4 :: Int -> Int
-f4 x = x
-
-f5 = do
-  x1 <- f2 1
-  x2 <- f3 x1
-  let x3 = f4 x2
-  Just x3
-
-f6 :: [Int] -> Int
-f6 [] = 0
-f6 [n] = n+1
-f6 (n:ns) = n + f6 ns
-
-alphabet x =
-  lookup x $ zip [1..] ['A'..'Z']
-
-toSmall c =
-  lookup c $ zip ['A'..'Z'] ['a'..]
-
-alphabetSmall x = do
-  c <- alphabet x
-  toSmall c
+import System.Environment
+import System.FilePath
+import System.IO
 
 main = do
-  sequence_ [print 123,putStrLn "hello"]
-
-data Parent = Child1 Int | Child2 String deriving Show
-
-pickup :: [Parent] -> [Int]
-pickup parents =
-  map (\(Child1 x) -> x) $ filter (\x -> case x of
-    Child1 _ -> True
-    otherwise -> False) parents
-
-
-newtype CharList = CharList {getCharList :: [Char]} deriving (Eq,Show)
-
-newtype NewType = NewType { getNewType :: Int} deriving (Eq,Show)
-
-fNewType (NewType n) = n + 1
-
-combineString :: String -> String -> String
-combineString a b =
-  case (a,b) of
-    ([],[]) -> "empty!"
-    (l,r) -> l ++ r;
-
-data Kata a = Kata (a,Int) deriving Show
-
-data OrdTest = OT1 | OT2 deriving Show
-
-instance Eq OrdTest where
-  OT1 == OT1 = True
-  OT2 == OT2 = True
-  _   == _   = False
-
-instance Ord OrdTest where
-  OT1 `compare` OT2 = LT
-
-data DataTest = DataTest Int Int String deriving Show
+  args <- getArgs
+  let file = head args
+  prog <- getExecutablePath
+  let path = splitPath prog
+  let filename = (++file) . concat $ init path
+  handle <- openFile filename ReadMode
+  source <- hGetContents handle
+  putStrLn source

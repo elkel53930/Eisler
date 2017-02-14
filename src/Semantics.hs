@@ -15,6 +15,18 @@ type ErrorMsg = String
 
 type Result = Either ErrorMsg
 
+moduleNet :: [SourceElement] -> ModuleName -> Result [Net]
+moduleNet parsed name = do
+  srcElems <- checkOverlap parsed
+  let (defParts,defMods) = divideSrc srcElems
+  (_,(_,modElems)) <- searchMod defMods name
+  let (wires,decParts,conExprs) = divideMod modElems
+  let cncts = expansionaCnct conExprs
+  ports <- convertToPort decParts defParts cncts
+  let refed = referencing ports
+  nets <- combineConnectables [] refed
+  Right $ namingWire nets 1
+
 getRef :: Connectable -> Reference
 getRef (ConPort _ _ ref _) = ref
 

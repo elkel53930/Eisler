@@ -1,0 +1,37 @@
+import "Basic.eis"
+
+defpart Battery(1:Plus 2:Minus){ref "BTT";}
+defpart TA78033AF(1:VIN  2:VOUT  3:GND){ref "IC";}
+defpart LargeLED(1:A 2:K) {ref "LD";}
+defpart CONN2(1:_1 2:_2){ref "CN";}
+
+!This is comment out!
+
+defmodule main()
+{
+  part r1 as R;
+  part led1 as LED;
+  part btt as Battery;
+  part cin as C;
+  part cout as C;
+  part reg as TA78033AF;
+  part cn as CONN2;
+
+  part sw as NchFET;
+  part pdr as R;
+
+  wire VCC;
+  wire GND;
+
+  reg.VIN - Plus.btt;
+  reg.GND - GND;
+  btt.Minus - GND;
+  reg.VIN - _1.cin._2 - GND;
+  reg.VOUT - _1.cout._2 - GND;
+
+  reg.VOUT - VCC;
+  VCC - _1.r1._2 - A.led1.K - D.sw.S - GND;
+
+  sw.G - _1.pdr._2 - GND - _1.cn;
+  sw.G - _2.cn;
+}

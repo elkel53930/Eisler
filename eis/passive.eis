@@ -1,25 +1,3 @@
-defpart R(1:1,2:2)
-{
-  ref "R";
-  param registance as string;  // ex. "100K"
-  param package as string;     // ex. "1608", "lead0.5W"
-  param error as string;       // ex. "5%"
-}
-
-defpart C(1:1,2:2)
-{
-  ref "C";
-  param capacitance as string; // ex. "0.1u"
-  param package as string;
-  param voltage as string;     // ex. "50V"
-  param grade as string;       // ex. "X5R"
-}
-
-defpart L(1:1,2:2)
-{
-  ref "L";
-  param inductance as string;  // ex. "2.2u"
-  param current as string;     // ex. "5A"
-  param package as string;
-  param esr as string;         // ex. "20mohm"
-}
+defpart R(1:_1 2:_2) {ref "R";}
+defpart C(1:_1 2:_2){ref "C";}
+defpart L(1:_1 2:_2){ref "L";}
