@@ -240,28 +240,28 @@ conExpr = do
 
 strLit :: Parser String
 strLit = do
-  spaces
+  spcmnt
   char '"'
   result <- many $ noneOf "\""
   char '"'
-  spaces
+  spcmnt
   return result
 
 intLit :: Parser IntLit
 intLit = do
-  spaces
+  spcmnt
   pos <- getPosition
   result <- many1 digit
-  spaces
+  spcmnt
   return $ Token (read result) pos
 
 iden :: Parser Identify
 iden = do
-  spaces
+  spcmnt
   pos <- getPosition
   headLetter <- letter_
   tails <- many (letter_ <|> digit)
-  spaces
+  spcmnt
   return $ Token (headLetter : tails) pos
 
 letter_ :: Parser Char
@@ -269,14 +269,31 @@ letter_ = letter <|> char '_'
 
 charSp :: Char -> Parser String
 charSp c = do
-  spaces
+  spcmnt
   result <- char c
-  spaces
+  spcmnt
   return [c]
 
 stringSp :: String -> Parser String
 stringSp s = do
-  spaces
+  spcmnt
   result <- string s
-  spaces
+  spcmnt
   return s
+
+spcmnt :: Parser String
+spcmnt = do
+  result <- many (sp <|> comment)
+  return $ concat result
+
+sp :: Parser String
+sp = do
+  result <- many1 space
+  return result
+
+comment :: Parser String
+comment = do
+   char '!'
+   result <- many1 $ noneOf "!"
+   char '!'
+   return ('!' : result ++ "!")
