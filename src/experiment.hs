@@ -60,3 +60,27 @@ pickup parents =
 
 
 newtype CharList = CharList {getCharList :: [Char]} deriving (Eq,Show)
+
+newtype NewType = NewType { getNewType :: Int} deriving (Eq,Show)
+
+fNewType (NewType n) = n + 1
+
+combineString :: String -> String -> String
+combineString a b =
+  case (a,b) of
+    ([],[]) -> "empty!"
+    (l,r) -> l ++ r;
+
+data Kata a = Kata (a,Int) deriving Show
+
+data OrdTest = OT1 | OT2 deriving Show
+
+instance Eq OrdTest where
+  OT1 == OT1 = True
+  OT2 == OT2 = True
+  _   == _   = False
+
+instance Ord OrdTest where
+  OT1 `compare` OT2 = LT
+
+data DataTest = DataTest Int Int String deriving Show

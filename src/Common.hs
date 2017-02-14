@@ -3,27 +3,12 @@ module Common where
 import Data.Tuple
 import Data.List
 
-lookupWith2 :: (a->Bool) -> [a] -> Maybe a
-lookupWith2 _ [] = Nothing
-lookupWith2 f (a:as) =
+lookupWith :: (a->Bool) -> [a] -> Maybe a
+lookupWith _ [] = Nothing
+lookupWith f (a:as) =
   if f a
     then Just a
-    else lookupWith2 f as
-
-lookupWith :: (c -> a ->Bool) -> c -> [(a,b)] -> Maybe (a,b)
-lookupWith _ _ [] = Nothing
-lookupWith f a ((x,y):ts) =
-  if f a x
-    then Just (x,y)
-    else lookupWith f a ts
-
-
-lookupWith_ :: (c -> a ->Bool) -> c -> [(b,a)] -> Maybe (b,a)
-lookupWith_ _ _ [] = Nothing
-lookupWith_ f a ((x,y):ts) =
-  if f a y
-    then Just (x,y)
-    else lookupWith_ f a ts
+    else lookupWith f as
 
 justSnd = Just . snd
 justFst = Just .fst
@@ -55,3 +40,8 @@ pickup = pickupBy (==)
 fst4 (x,_,_,_) = x
 snd4 (_,x,_,_) = x
 thd4 (_,_,x,_) = x
+
+format :: Int -> Int -> String
+format n digit = (replicate (digit - len) '0') ++ num where
+  len = length num
+  num = show n

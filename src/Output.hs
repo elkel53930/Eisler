@@ -12,7 +12,7 @@ header = "!Eisler 0.1!\n*REMARK* "
        ++ " -- \n"
        ++ "*REMARK*\n"
 
-outputPart :: [(Port,Port)] -> String
+outputPart :: [(Connectable,Connectable)] -> String
 outputPart ps = ("*PART*       ITEMS\n" ++)
   . outputPart_
   . map (\(c,_,r,pa)->(c,r,pa))
@@ -24,11 +24,11 @@ outputPart_ :: [(CompName,Reference,PartName)] -> String
 outputPart_ [] = ""
 outputPart_ ((c,r,pa):ts) = r ++ "    " ++ c ++ "@" ++ pa ++ "\n" ++ (outputPart_ ts)
 
-outputSignal :: [Port] -> String
+outputSignal :: [Connectable] -> String
 outputSignal [] = ""
 outputSignal ((_,p,r,_):ps) = r ++ "." ++ (show p) ++ " " ++ (outputSignal ps)
 
-outputSignals :: [Set.Set Port] -> Int -> String
+outputSignals :: [Set.Set Connectable] -> Int -> String
 outputSignals [] _ = ""
 outputSignals (set:sets) n =
   "*SIGNAL* $$$" ++ (replicate (5 - len) '0') ++ num ++ "\n" ++
@@ -38,5 +38,5 @@ outputSignals (set:sets) n =
     len = length num
     num = show n
 
-outputNet :: [Set.Set Port] -> String
+outputNet :: [Set.Set Connectable] -> String
 outputNet set = "*NET*\n" ++ outputSignals set 1

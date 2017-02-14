@@ -2,18 +2,22 @@ module Parser where
 
 import Text.ParserCombinators.Parsec
 import System.IO
+import Text.Parsec.Pos
 
 data Cnct = Pin CompIden PortIden
           | Wire WireIden  deriving Show
 data BCnct = BPin PortIden CompIden PortIden
            | BWire WireIden  deriving Show
 
-newtype WireIden = WireIden {getWireIden :: (WireName,SourcePos)} deriving(Show,Eq)
-newtype PartIden = PartIden {getPartIden :: (PartName,SourcePos)} deriving(Show,Eq)
-newtype PortIntLit = PortIntLit {getPortIntLit :: (PortNum,SourcePos)} deriving(Show,Eq)
-newtype PortIden = PortIden {getPortIden :: (PortName,SourcePos)} deriving(Show,Eq)
-newtype ModuleIden = ModuleIden {getModuleIden :: (ModuleName,SourcePos)} deriving(Show,Eq)
-newtype CompIden = CompIden {getCompIden :: (CompName,SourcePos)} deriving(Show,Eq)
+data Token a = Token a SourcePos deriving Show
+type Identify = Token String
+type IntLit = Token Int
+type WireIden = Identify
+type PartIden = Identify
+type PortIntLit = IntLit
+type PortIden = Identify
+type ModuleIden = Identify
+type CompIden = Identify
 
 type Reference = String
 type WireName = String
@@ -36,6 +40,14 @@ data ModuleElement = DecPart DeclarePart
                    | DecWire WireIden
                    | ConExpr ConnectExpression deriving Show
 
+instance Eq a => Eq (Token a) where
+  Token name1 _ == Token name2 _ = name1 == name2
+instance Ord a => Ord (Token a) where
+  (Token name1 _) < (Token name2 _) = name1 < name2
+  (Token name1 _) > (Token name2 _) = name1 > name2
+  (Token name1 _) <= (Token name2 _) = name1 <= name2
+  (Token name1 _) >= (Token name2 _) = name1 >= name2
+
 kwdDefModule = "defmodule"
 kwdDefPart = "defpart"
 kwdDecPart = "part"
@@ -43,10 +55,17 @@ kwdAs = "as"
 kwdImport = "import"
 kwdDecWire = "wire"
 
-eqPartIden name (PartIden(partName,_)) = name == partName
-eqPortIden name (PortIden(portName,_)) = name == portName
-eqModuleIden name (ModuleIden(modName,_)) = name == modName
-eqCompIden name (CompIden(compName,_)) = name == compName
+showPos :: Token a -> String
+showPos (Token _ pos) = show pos
+
+getToken :: Token a -> a
+getToken (Token a _) = a
+
+newToken :: a -> Token a
+newToken a = Token a $ newPos "Internal" 0 0
+
+(.==) :: Eq a => Token a -> a -> Bool
+(Token x _) .== y = x == y
 
 parseEisFile :: FilePath -> IO(Either ParseError [SourceElement])
 parseEisFile filepath = parseEisFiles [filepath] []
@@ -101,7 +120,7 @@ defModule = do
                   try decPart <|>
                   conExpr)
   charSp '}'
-  return $ DefMod (ModuleIden m, (ps, elems))
+  return $ DefMod (m, (ps, elems))
 
 defPart :: Parser SourceElement
 defPart = do
@@ -113,7 +132,7 @@ defPart = do
   charSp '{'
   ref <- partRef
   charSp '}'
-  return $ DefPart (PartIden p, (ps, ref))
+  return $ DefPart (p, (ps, ref))
 
 imp :: Parser SourceElement
 imp = do
@@ -133,7 +152,7 @@ port = do
   n <- intLit
   charSp ':'
   s <- iden
-  return (PortIntLit n,PortIden s)
+  return (n,s)
 
 {-
   part/module/wire declare
@@ -146,14 +165,14 @@ decPart = do
   stringSp kwdAs
   p <- iden
   charSp ';'
-  return $ DecPart (CompIden c, PartIden p)
+  return $ DecPart (c,p)
 
 decWire :: Parser ModuleElement
 decWire = do
   stringSp kwdDecWire
   w <- iden
   charSp ';'
-  return . DecWire $ WireIden w
+  return $ DecWire w
 
 {-
   ConExpr
@@ -164,19 +183,19 @@ rCnctCompPort = do
   c <- iden
   char '.'
   p <- iden
-  return $ Pin (CompIden c) (PortIden p)
+  return $ Pin c p
 
 lCnctCompPort :: Parser Cnct
 lCnctCompPort = do
   p <- iden
   char '.'
   c <- iden
-  return $ Pin (CompIden c) (PortIden p)
+  return $ Pin c p
 
 wire :: Parser Cnct
 wire = do
   l <- iden
-  return $ Wire (WireIden l)
+  return $ Wire l
 
 bCnctCompPort :: Parser BCnct
 bCnctCompPort = do
@@ -185,12 +204,12 @@ bCnctCompPort = do
   c <- iden
   char '.'
   pr <- iden
-  return $ BPin (PortIden pl) (CompIden c) (PortIden pr)
+  return $ BPin pl c pr
 
 bWire :: Parser BCnct
 bWire = do
   l <- iden
-  return $ BWire (WireIden l)
+  return $ BWire l
 
 rCnct :: Parser Cnct
 rCnct = do
@@ -228,22 +247,22 @@ strLit = do
   spaces
   return result
 
-intLit :: Parser (Int,SourcePos)
+intLit :: Parser IntLit
 intLit = do
   spaces
   pos <- getPosition
   result <- many1 digit
   spaces
-  return $ (read result, pos)
+  return $ Token (read result) pos
 
-iden :: Parser (String,SourcePos)
+iden :: Parser Identify
 iden = do
   spaces
   pos <- getPosition
   headLetter <- letter_
   tails <- many (letter_ <|> digit)
   spaces
-  return $ (headLetter : tails, pos)
+  return $ Token (headLetter : tails) pos
 
 letter_ :: Parser Char
 letter_ = letter <|> char '_'
