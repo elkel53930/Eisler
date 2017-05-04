@@ -3,6 +3,7 @@ module Parser where
 import Text.ParserCombinators.Parsec
 import System.IO
 import Text.Parsec.Pos
+import Text.Parsec.Char
 
 data Cnct = Pin CompIden PortIden
           | Wire WireIden  deriving Show
@@ -30,13 +31,15 @@ type CompName = String
 type DefinePart = (PartIden, ([(PortIntLit,PortIden)], Reference))
 type DefineModule = (ModuleIden, ([(PortIntLit,PortIden)], [ModuleElement]))
 type DeclarePart = (CompIden, PartIden)
+type DeclareModule = (CompIden, ModuleIden)
 type ConnectExpression = (Cnct, [BCnct], Cnct)
 
 data SourceElement = Import FilePath
                    | DefPart DefinePart
                    | DefMod DefineModule deriving Show
 
-data ModuleElement = DecPart DeclarePart
+data ModuleElement = DecMod DeclareModule
+                   | DecPart DeclarePart
                    | DecWire WireIden
                    | ConExpr ConnectExpression deriving Show
 
@@ -51,6 +54,7 @@ instance Ord a => Ord (Token a) where
 kwdDefModule = "defmodule"
 kwdDefPart = "defpart"
 kwdDecPart = "part"
+kwdDecMod = "module"
 kwdAs = "as"
 kwdImport = "import"
 kwdDecWire = "wire"
@@ -66,6 +70,9 @@ newToken a = Token a $ newPos "Internal" 0 0
 
 (.==) :: Eq a => Token a -> a -> Bool
 (Token x _) .== y = x == y
+
+concatIden :: String -> Identify -> Identify
+concatIden pre (Token name pos) = Token (pre++name) pos
 
 parseEisFile :: FilePath -> IO(Either ParseError [SourceElement])
 parseEisFile filepath = parseEisFiles [filepath] []
@@ -173,6 +180,15 @@ decWire = do
   w <- iden
   charSp ';'
   return $ DecWire w
+
+decModule :: Parser ModuleElement
+decModule = do
+  stringSp kwdDecMod
+  c <- iden
+  stringSp kwdAs
+  m <- iden
+  charSp ';'
+  return $ DecMod (c,m)
 
 {-
   ConExpr
@@ -283,7 +299,7 @@ stringSp s = do
 
 spcmnt :: Parser String
 spcmnt = do
-  result <- many (sp <|> comment)
+  result <- many (sp <|> try blockCmnt <|> try lineCmnt)
   return $ concat result
 
 sp :: Parser String
@@ -291,9 +307,49 @@ sp = do
   result <- many1 space
   return result
 
-comment :: Parser String
-comment = do
-   char '!'
-   result <- many1 $ noneOf "!"
-   char '!'
-   return ('!' : result ++ "!")
+blockCmnt :: Parser String
+blockCmnt = do
+  string "/*"
+  cmnt <- blockCmntEnd
+  return cmnt
+
+blockCmntEnd :: Parser String
+blockCmntEnd = do
+  cmnt <-
+    try( do{
+      string "*/";
+      return "";
+      }) <|>
+    do{
+      c<-anyChar;
+      cs<-blockCmntEnd;
+      return $ c:cs;
+    }
+  return cmnt
+
+lineCmnt :: Parser String
+lineCmnt = do
+  string "//"
+  cmnt <- lineCmntEnd
+  return cmnt
+
+
+lineCmntEnd :: Parser String
+lineCmntEnd = do
+  cmnt <-
+    try( do{
+      eol;
+      return "";
+      }) <|>
+    do{
+      c<-anyChar;
+      cs<-lineCmntEnd;
+      return $ c:cs;
+    }
+  return cmnt
+
+eol :: Parser String
+eol =   try (string "\n\r")
+    <|> try (string "\r\n")
+    <|> string "\n"
+    <|> string "\r"

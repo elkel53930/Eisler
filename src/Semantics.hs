@@ -12,38 +12,61 @@ newtype Net = Net { getNet :: (WireIden, Set.Set Connectable)} deriving (Show,Eq
 data Connectable = ConWire WireIden
                  | ConPort CompIden PortIntLit Reference PartIden deriving (Show,Eq,Ord)
 type ErrorMsg = String
-
 type Result = Either ErrorMsg
 
-moduleNet :: [SourceElement] -> ModuleName -> Result [Net]
+expandModules :: [ModuleElement] -> String -> [ModuleElement]
+expandModules [] _ = []
+expandModules (m:ms) pre =
+  case m of
+    DecPart (comp,part) -> DecPart (concatIden pre comp,part) : expandModules ms pre
+    DecWire w           -> (DecWire $ concatIden pre w) : expandModules ms pre
+    ConExpr c           -> (ConExpr $ mangleCe pre c) : expandModules ms pre
+
+mangleCe :: String -> ConnectExpression -> ConnectExpression
+mangleCe pre (cl,bs,cr) = (mangleC pre cl, mangleBcs pre bs, mangleC pre cr)
+
+mangleBcs :: String -> [BCnct] -> [BCnct]
+mangleBcs _ [] = []
+mangleBcs pre (b:bs) =
+  case b of
+    BPin pl c pr -> BPin pl (concatIden pre c) pr : mangleBcs pre bs
+    BWire w      -> BWire (concatIden pre w)      : mangleBcs pre bs
+
+mangleC :: String -> Cnct -> Cnct
+mangleC pre c =
+  case c of
+    Pin c p -> Pin (concatIden pre c) p
+    Wire w  -> Wire $ concatIden pre w
+
+moduleNet :: [SourceElement] -> ModuleName -> Result [(Connectable,Connectable)]
 moduleNet parsed name = do
-  srcElems <- checkOverlap parsed
+  srcElems <- checkOverlap parsed name
   let (defParts,defMods) = divideSrc srcElems
   (_,(_,modElems)) <- searchMod defMods name
-  let (wires,decParts,conExprs) = divideMod modElems
+  let (wires,decParts,decMods,conExprs) = divideMod modElems
   let cncts = expansionaCnct conExprs
-  ports <- convertToPort decParts defParts cncts
-  let refed = referencing ports
-  nets <- combineConnectables [] refed
-  Right $ namingWire nets 1
+  convertToPort decParts defParts cncts
 
 getRef :: Connectable -> Reference
 getRef (ConPort _ _ ref _) = ref
 
-checkOverlap :: [SourceElement] -> Result [SourceElement]
-checkOverlap srcElems = do
-  case (\input -> input \\ nub input) $ getIdens srcElems of
+checkOverlap :: [SourceElement] -> ModuleName -> Result [SourceElement]
+checkOverlap srcElems mname = do
+  case (\input -> input \\ nub input) $ getIdens srcElems mname of
     [] -> Right srcElems
     overlaps -> Left $ getOverlapsError overlaps
 
 -- [SourceElement]内の識別子の一覧を返す。
-getIdens :: [SourceElement] -> [Token String]
-getIdens [] = []
-getIdens (t:ts) = name ++ getIdens ts where
+getIdens :: [SourceElement] -> ModuleName -> [Token String]
+getIdens [] _ = []
+getIdens (t:ts) tagMod = name ++ getIdens ts tagMod where
   name =
     case t of
       DefPart (pname, (_, _)) -> [pname]
-      DefMod (mname, (_, m)) -> (mname) : getIdensMod m
+      DefMod (mname, (_, m)) ->
+        if mname .== tagMod
+          then (mname) : getIdensMod m
+          else []
 
 -- [ModuleElement]内の識別子の一覧を返す
 getIdensMod :: [ModuleElement] -> [Token String]
@@ -51,7 +74,8 @@ getIdensMod [] = []
 getIdensMod (t:ts) =
   case t of
     DecPart (cname, _) -> cname : (getIdensMod ts)
-    DecWire (wname) -> wname : (getIdensMod ts)
+    DecWire (wname   ) -> wname : (getIdensMod ts)
+    DecMod  (mname, _) -> mname : (getIdensMod ts)
     ConExpr _ -> getIdensMod ts
 
 getOverlapsError :: [Token String] -> String
@@ -69,14 +93,16 @@ divideSrc ((DefPart p):ts) = (p:ps,ms) where
 divideSrc ((DefMod m):ts) = (ps,m:ms) where
   (ps,ms) = divideSrc ts
 
-divideMod :: [ModuleElement] -> ([WireIden],[DeclarePart],[ConnectExpression])
-divideMod [] = ([],[],[])
-divideMod ((DecPart p):ts) = (ws,p:ps,cs) where
-  (ws,ps,cs) = divideMod ts
-divideMod ((ConExpr c):ts) = (ws,ps,c:cs) where
-  (ws,ps,cs) = divideMod ts
-divideMod ((DecWire w):ts) = (w:ws,ps,cs) where
-  (ws,ps,cs) = divideMod ts
+divideMod :: [ModuleElement] -> ([WireIden],[DeclarePart],[DeclareModule],[ConnectExpression])
+divideMod [] = ([],[],[],[])
+divideMod ((DecPart p):ts) = (ws,p:ps,ms,cs) where
+  (ws,ps,ms,cs) = divideMod ts
+divideMod ((ConExpr c):ts) = (ws,ps,ms,c:cs) where
+  (ws,ps,ms,cs) = divideMod ts
+divideMod ((DecWire w):ts) = (w:ws,ps,ms,cs) where
+  (ws,ps,ms,cs) = divideMod ts
+divideMod ((DecMod  m):ts) = (ws,ps,m:ms,cs) where
+  (ws,ps,ms,cs) = divideMod ts
 
 -- -- -- --  search -- -- -- --
 
@@ -153,8 +179,6 @@ cnctToConnectable decParts defParts (Pin compIden portIden) = do
 cnctToConnectable decParts defParts (Wire wireIden) = do
   Right $ ConWire wireIden
 
-
-
 ordRef :: Connectable -> Connectable -> Ordering
 ordRef x@(ConPort _ _ _ _) y@(ConPort _ _ _ _) = compare (getRef x) (getRef y)
 ordRef (ConPort _ _ _ _) (ConWire _) = GT
@@ -203,13 +227,11 @@ renameRefSingle ((c,r):ts) port@(ConPort pc pp pr ppa) =
     else renameRefSingle ts port
 renameRefSingle _ (ConWire w) = ConWire w
 
-
 combineConnectables :: [Net] -> [(Connectable,Connectable)] -> Result [Net]
 combineConnectables _ [] = Right []
 combineConnectables origin (c:cs) = do
   newNets <- combineConnectables origin cs
   combineConnectable newNets c
-
 
 combineConnectable :: [Net] -> (Connectable,Connectable) -> Result [Net]
 combineConnectable origin (c1,c2) = do

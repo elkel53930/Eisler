@@ -12,7 +12,7 @@ import qualified Data.Set as Set
 main = do
   args <- getArgs
   case (length args) of
-    0 -> putStrLn "Eisler translator to PADS Logic netlist."
+    0 -> putStrLn "Eisler translator to KiCad legacy netlist."
     otherwise -> translate args
 
 translate args = do
@@ -22,8 +22,11 @@ translate args = do
   case result of
     Right parsed -> case do
       -- Result = Either ErrorMsg
-      named <- S.moduleNet parsed "main"
+      ports <- S.moduleNet parsed "main"
+      let refed = S.referencing ports
+      nets <- S.combineConnectables [] refed
+      let named = S.namingWire nets 1
       Right $ Kicad.output named of
         Right kicad -> putStrLn kicad
-        Left l -> putStrLn l
+        Left l      -> putStrLn l
     Left err -> putStrLn $ show err
