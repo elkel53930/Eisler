@@ -17,6 +17,9 @@ defmodule main()
   part reg as TA78033AF;
   part cn as CONN2;
 
+  interface itfc;
+  interface a;
+
   part sw as NchFET;
   part pdr as R;
 
@@ -24,7 +27,9 @@ defmodule main()
   wire GND;
 
   reg.VIN - Plus.btt;
-  reg.GND - GND;
+  reg.GND - itfc;
+  itfc - a;
+  a - GND;
   btt.Minus - GND;
   reg.VIN - _1.cin._2 - GND;
   reg.VOUT - _1.cout._2 - GND;

@@ -10,42 +10,44 @@ import Common
 --type Module = (ModuleIden, [ Net ])
 newtype Net = Net { getNet :: (WireIden, Set.Set Connectable)} deriving (Show,Eq)
 data Connectable = ConWire WireIden
+                 | ConItfc ItfcIden
                  | ConPort CompIden PortIntLit Reference PartIden deriving (Show,Eq,Ord)
 type ErrorMsg = String
 type Result = Either ErrorMsg
 
 expandModules :: [ModuleElement] -> String -> [ModuleElement]
 expandModules [] _ = []
-expandModules (m:ms) pre =
+expandModules (m:ms) suf =
   case m of
-    DecPart (comp,part) -> DecPart (concatIden pre comp,part) : expandModules ms pre
-    DecWire w           -> (DecWire $ concatIden pre w) : expandModules ms pre
-    ConExpr c           -> (ConExpr $ mangleCe pre c) : expandModules ms pre
+    DecPart (comp,part) -> DecPart (addSuffix comp suf,part) : expandModules ms suf
+    DecWire w           -> (DecWire $ addSuffix w suf) : expandModules ms suf
+    ConExpr c           -> (ConExpr $ mangleCe suf c) : expandModules ms suf
 
 mangleCe :: String -> ConnectExpression -> ConnectExpression
-mangleCe pre (cl,bs,cr) = (mangleC pre cl, mangleBcs pre bs, mangleC pre cr)
+mangleCe suf (cl,bs,cr) = (mangleC suf cl, mangleBcs suf bs, mangleC suf cr)
 
 mangleBcs :: String -> [BCnct] -> [BCnct]
 mangleBcs _ [] = []
-mangleBcs pre (b:bs) =
+mangleBcs suf (b:bs) =
   case b of
-    BPin pl c pr -> BPin pl (concatIden pre c) pr : mangleBcs pre bs
-    BWire w      -> BWire (concatIden pre w)      : mangleBcs pre bs
+    BPin pl c pr -> BPin pl (addSuffix c suf) pr : mangleBcs suf bs
+    BWire w      -> BWire (addSuffix w suf)      : mangleBcs suf bs
 
 mangleC :: String -> Cnct -> Cnct
-mangleC pre c =
+mangleC suf c =
   case c of
-    Pin c p -> Pin (concatIden pre c) p
-    Wire w  -> Wire $ concatIden pre w
+    Pin c p -> Pin (addSuffix c suf) p
+    Wire w  -> Wire $ addSuffix w suf
+
+addSuffix :: Identify -> String -> Identify
+addSuffix (Token name pos) suf = Token (name ++ "@" ++ suf) pos
 
 moduleNet :: [SourceElement] -> ModuleName -> Result [(Connectable,Connectable)]
 moduleNet parsed name = do
   srcElems <- checkOverlap parsed name
-  let (defParts,defMods) = divideSrc srcElems
-  (_,(_,modElems)) <- searchMod defMods name
-  let (wires,decParts,decMods,conExprs) = divideMod modElems
-  let cncts = expansionaCnct conExprs
-  convertToPort decParts defParts cncts
+  (_,(_,modElems)) <- searchMod (snd $ divideSrc srcElems) name
+  let cncts = expansionaCnct . pickupConExpr $ modElems
+  convertToPort modElems (fst $ divideSrc srcElems) cncts
 
 getRef :: Connectable -> Reference
 getRef (ConPort _ _ ref _) = ref
@@ -76,6 +78,7 @@ getIdensMod (t:ts) =
     DecPart (cname, _) -> cname : (getIdensMod ts)
     DecWire (wname   ) -> wname : (getIdensMod ts)
     DecMod  (mname, _) -> mname : (getIdensMod ts)
+    DecItfc (iname   ) -> iname : (getIdensMod ts)
     ConExpr _ -> getIdensMod ts
 
 getOverlapsError :: [Token String] -> String
@@ -93,16 +96,31 @@ divideSrc ((DefPart p):ts) = (p:ps,ms) where
 divideSrc ((DefMod m):ts) = (ps,m:ms) where
   (ps,ms) = divideSrc ts
 
-divideMod :: [ModuleElement] -> ([WireIden],[DeclarePart],[DeclareModule],[ConnectExpression])
-divideMod [] = ([],[],[],[])
-divideMod ((DecPart p):ts) = (ws,p:ps,ms,cs) where
-  (ws,ps,ms,cs) = divideMod ts
-divideMod ((ConExpr c):ts) = (ws,ps,ms,c:cs) where
-  (ws,ps,ms,cs) = divideMod ts
-divideMod ((DecWire w):ts) = (w:ws,ps,ms,cs) where
-  (ws,ps,ms,cs) = divideMod ts
-divideMod ((DecMod  m):ts) = (ws,ps,m:ms,cs) where
-  (ws,ps,ms,cs) = divideMod ts
+pickupDecPart :: [ModuleElement] -> [DeclarePart]
+pickupDecPart [] = []
+pickupDecPart ((DecPart p):ts) = p : pickupDecPart ts
+pickupDecPart (_:ts) = pickupDecPart ts
+
+pickupConExpr :: [ModuleElement] -> [ConnectExpression]
+pickupConExpr [] = []
+pickupConExpr ((ConExpr c):ts) = c : pickupConExpr ts
+pickupConExpr (_:ts) = pickupConExpr ts
+
+pickupDecWire :: [ModuleElement] -> [WireIden]
+pickupDecWire [] = []
+pickupDecWire ((DecWire w):ts) = w : pickupDecWire ts
+pickupDecWire (_:ts) = pickupDecWire ts
+{-
+pickupDecMod :: [ModuleElement] -> [DeclareModule]
+pickupDecMod [] = []
+pickupDecMod ((DecMod m):ts) = m : pickupDecMod ts
+pickupDecMod (_:ts) = pickupDecMod ts
+-}
+
+pickupDecItfc :: [ModuleElement] -> [ItfcIden]
+pickupDecItfc [] = []
+pickupDecItfc ((DecItfc i):ts) = i : pickupDecItfc ts
+pickupDecItfc (_:ts) = pickupDecItfc ts
 
 -- -- -- --  search -- -- -- --
 
@@ -137,17 +155,16 @@ rightCnct (BPin _ comp port) = Pin comp port
 rightCnct (BWire wire) = Wire wire
 
 -- -- -- -- convert from Cnct to Connectable -- -- -- --
-convertToPort :: [DeclarePart] -> [DefinePart] -> [(Cnct,Cnct)] -> Result [(Connectable,Connectable)]
+convertToPort :: [ModuleElement] -> [DefinePart] -> [(Cnct,Cnct)] -> Result [(Connectable,Connectable)]
 convertToPort _ _ [] = Right []
-convertToPort decParts defParts ((cl,cr):cs) = do
-  pl <- cnctToConnectable decParts defParts cl
-  pr <- cnctToConnectable decParts defParts cr
-  convertToPort decParts defParts cs >>= (\x xs -> Right (x:xs)) (pl,pr)
-
+convertToPort modElems defParts ((cl,cr):cs) = do
+  pl <- cnctToConnectable modElems defParts cl
+  pr <- cnctToConnectable modElems defParts cr
+  convertToPort modElems defParts cs >>= (\x xs -> Right (x:xs)) (pl,pr)
 
 searchComp :: CompIden -> [DeclarePart] -> Result PartIden
 searchComp comp decParts =
-  case lookupWith (\(x,_)->x==comp)  decParts >>= justSnd of
+  case lookupWith (\(x,_)->x==comp) decParts >>= justSnd of
     Just name -> Right name
     Nothing -> Left $ showPos comp ++ "\n\tComponent '" ++ getToken comp ++ "' is not declared."
 
@@ -163,6 +180,20 @@ searchPort port partInfos =
     Just portIntLit -> Right portIntLit
     Nothing -> Left $ (showPos port) ++ "\n\tPort '" ++ getToken port ++ "' is not defined."
 
+searchItfc :: WireIden -> [ModuleElement] -> Maybe ItfcIden
+searchItfc wire modElems =
+  case elem wire decItfc of
+    True  -> Just wire
+    False -> Nothing
+  where decItfc = pickupDecItfc modElems
+
+searchWire :: WireIden -> [ModuleElement] -> Maybe WireIden
+searchWire wire modElems =
+  case elem wire decWire of
+    True  -> Just wire
+    False -> Nothing
+  where decWire = pickupDecWire modElems
+
 -- Connectable = (CompName, PortNum)
 {-
   CnctのCompIden内のCompNameをキーに、[DeclarePart]から、PartIdenを探し出す。
@@ -170,20 +201,31 @@ searchPort port partInfos =
   この[(PortIntLit,PortIden)]から、CnctのPortIden内のPortNameをキーにPortNumを探し出す。
   CompNameとPortNumのタプル = Connectableを返す。
 -}
-cnctToConnectable :: [DeclarePart] -> [DefinePart] -> Cnct -> Result Connectable
-cnctToConnectable decParts defParts (Pin compIden portIden) = do
-  partIden <- searchComp compIden decParts
+cnctToConnectable :: [ModuleElement] -> [DefinePart] -> Cnct -> Result Connectable
+cnctToConnectable modElems defParts (Pin compIden portIden) = do
+  partIden <- searchComp compIden $ pickupDecPart modElems
   partInfo <- searchPart partIden defParts
   portIntLit <- searchPort portIden (fst partInfo)
   Right (ConPort compIden portIntLit (snd partInfo) partIden)
-cnctToConnectable decParts defParts (Wire wireIden) = do
-  Right $ ConWire wireIden
+cnctToConnectable modElems _ (Wire wireIden) = do
+  -- DecWireとDecItfcの中から該当するものがあるかどうか探す
+  case searchWire wireIden modElems of
+    Nothing -> case searchItfc wireIden modElems of
+      Nothing -> Left $ showPos wireIden ++  "\n\t'" ++ getToken wireIden ++ " is not definded."
+      Just i  -> Right $ ConItfc wireIden
+    Just w  -> Right $ ConWire wireIden
 
+-- Port > Wire > Itfc
 ordRef :: Connectable -> Connectable -> Ordering
 ordRef x@(ConPort _ _ _ _) y@(ConPort _ _ _ _) = compare (getRef x) (getRef y)
 ordRef (ConPort _ _ _ _) (ConWire _) = GT
 ordRef (ConWire _) (ConPort _ _ _ _) = LT
 ordRef (ConWire x) (ConWire y) = compare x y
+ordRef (ConItfc _) (ConWire _) = LT
+ordRef (ConWire _) (ConItfc _) = GT
+ordRef (ConItfc _) (ConPort _ _ _ _) = LT
+ordRef (ConPort _ _ _ _) (ConItfc _) = GT
+ordRef (ConItfc x) (ConItfc y) = compare x y
 
 eqRef :: Connectable -> Connectable -> Bool
 eqRef pl pr = (==EQ) $ ordRef pl pr
@@ -193,6 +235,12 @@ eqComp (ConPort x _ _ _) (ConPort y _ _ _) = x == y
 eqComp (ConPort _ _ _ _) (ConWire _) = False
 eqComp (ConWire _) (ConPort _ _ _ _) = False
 eqComp (ConWire x) (ConWire y) = x == y
+eqComp (ConItfc _) (ConWire _) = False
+eqComp (ConWire _) (ConItfc _) = False
+eqComp (ConItfc _) (ConPort _ _ _ _) = False
+eqComp (ConPort _ _ _ _) (ConItfc _) = False
+eqComp (ConItfc x) (ConItfc y) = x == y
+
 
 referencing :: [(Connectable,Connectable)] -> [(Connectable,Connectable)]
 referencing ps = map (renameRef dic) ps
@@ -211,6 +259,7 @@ termRef_ :: [Connectable] -> Int -> [(CompIden,Reference)]
 termRef_ [] _ = []
 termRef_ ((ConPort c _ r _):ps) n = (c,r ++ (show n)) : (termRef_ ps $ n + 1)
 termRef_ (ConWire w:ps) n = termRef_ ps $ n
+termRef_ (ConItfc i:ps) n = termRef_ ps $ n
 
 expandTuple :: [(a,a)] -> [a]
 expandTuple [] = []
@@ -226,6 +275,7 @@ renameRefSingle ((c,r):ts) port@(ConPort pc pp pr ppa) =
     then ConPort pc pp r ppa
     else renameRefSingle ts port
 renameRefSingle _ (ConWire w) = ConWire w
+renameRefSingle _ (ConItfc i) = ConItfc i
 
 combineConnectables :: [Net] -> [(Connectable,Connectable)] -> Result [Net]
 combineConnectables _ [] = Right []
@@ -247,6 +297,11 @@ searchConnectable w@(ConWire name) (s:ss) =
   if (fst $ getNet s) == name
     then s
     else searchConnectable w ss
+searchConnectable i@(ConItfc _) [] = Net (newToken "", Set.singleton i)
+searchConnectable i@(ConItfc _) (s:ss) =
+  if Set.member i (snd $ getNet s)
+    then s
+    else searchConnectable i ss
 searchConnectable p@(ConPort _ _ _ _) [] = Net (newToken "", Set.singleton p)
 searchConnectable p@(ConPort _ _ _ _) (s:ss) =
   if Set.member p (snd $ getNet s)

@@ -19,6 +19,7 @@ translate args = do
   -- IO
   let sourceName = head args
   result <- P.parseEisFile sourceName
+  putStrLn . show $ result
   case result of
     Right parsed -> case do
       -- Result = Either ErrorMsg

@@ -1,0 +1,44 @@
+Right [DefPart (Token "LED" "Semiconductors.eis" (line 1, column 9),([(Token 1 "Semiconductors.eis" (line 1, column 13),Token "A" "Semiconductors.eis" (line 1, column 15)),(Token 2 "Semiconductors.eis" (line 1, column 17),Token "K" "Semiconductors.eis" (line 1, column 19))],"LD")),DefPart (Token "DIODE" "Semiconductors.eis" (line 2, column 9),([(Token 1 "Semiconductors.eis" (line 2, column 15),Token "A" "Semiconductors.eis" (line 2, column 17)),(Token 2 "Semiconductors.eis" (line 2, column 19),Token "K" "Semiconductors.eis" (line 2, column 21))],"D")),DefPart (Token "NchFET" "Semiconductors.eis" (line 3, column 9),([(Token 1 "Semiconductors.eis" (line 3, column 16),Token "G" "Semiconductors.eis" (line 3, column 18)),(Token 2 "Semiconductors.eis" (line 3, column 20),Token "S" "Semiconductors.eis" (line 3, column 22)),(Token 3 "Semiconductors.eis" (line 3, column 24),Token "D" "Semiconductors.eis" (line 3, column 26))],"Q")),DefPart (Token "PchFET" "Semiconductors.eis" (line 4, column 9),([(Token 1 "Semiconductors.eis" (line 4, column 16),Token "G" "Semiconductors.eis" (line 4, column 18)),(Token 2 "Semiconductors.eis" (line 4, column 20),Token "S" "Semiconductors.eis" (line 4, column 22)),(Token 3 "Semiconductors.eis" (line 4, column 24),Token "D" "Semiconductors.eis" (line 4, column 26))],"Q")),DefPart (Token "R" "Passive.eis" (line 1, column 9),([(Token 1 "Passive.eis" (line 1, column 11),Token "_1" "Passive.eis" (line 1, column 13)),(Token 2 "Passive.eis" (line 1, column 16),Token "_2" "Passive.eis" (line 1, column 18))],"R")),DefPart (Token "C" "Passive.eis" (line 2, column 9),([(Token 1 "Passive.eis" (line 2, column 11),Token "_1" "Passive.eis" (line 2, column 13)),(Token 2 "Passive.eis" (line 2, column 16),Token "_2" "Passive.eis" (line 2, column 18))],"C")),DefPart (Token "L" "Passive.eis" (line 3, column 9),([(Token 1 "Passive.eis" (line 3, column 11),Token "_1" "Passive.eis" (line 3, column 13)),(Token 2 "Passive.eis" (line 3, column 16),Token "_2" "Passive.eis" (line 3, column 18))],"L")),DefPart (Token "Battery" "../eis/minimumEis.eis" (line 3, column 9),([(Token 1 "../eis/minimumEis.eis" (line 3, column 17),Token "Plus" "../eis/minimumEis.eis" (line 3, column 19)),(Token 2 "../eis/minimumEis.eis" (line 3, column 24),Token "Minus" "../eis/minimumEis.eis" (line 3, column 26))],"BTT")),DefPart (Token "TA78033AF" "../eis/minimumEis.eis" (line 4, column 9),([(Token 1 "../eis/minimumEis.eis" (line 4, column 19),Token "VIN" "../eis/minimumEis.eis" (line 4, column 21)),(Token 2 "../eis/minimumEis.eis" (line 4, column 26),Token "VOUT" "../eis/minimumEis.eis" (line 4, column 28)),(Token 3 "../eis/minimumEis.eis" (line 4, column 34),Token "GND" "../eis/minimumEis.eis" (line 4, column 36))],"IC")),DefPart (Token "LargeLED" "../eis/minimumEis.eis" (line 5, column 9),([(Token 1 "../eis/minimumEis.eis" (line 5, column 18),Token "A" "../eis/minimumEis.eis" (line 5, column 20)),(Token 2 "../eis/minimumEis.eis" (line 5, column 22),Token "K" "../eis/minimumEis.eis" (line 5, column 24))],"LD")),DefPart (Token "CONN2" "../eis/minimumEis.eis" (line 6, column 9),([(Token 1 "../eis/minimumEis.eis" (line 6, column 15),Token "_1" "../eis/minimumEis.eis" (line 6, column 17)),(Token 2 "../eis/minimumEis.eis" (line 6, column 20),Token "_2" "../eis/minimumEis.eis" (line 6, column 22))],"CN")),DefMod (Token "main" "../eis/minimumEis.eis" (line 10, column 11),([],[DecPart (Token "r1" "../eis/minimumEis.eis" (line 12, column 8),Token "R" "../eis/minimumEis.eis" (line 12, column 14)),DecPart (Token "led1" "../eis/minimumEis.eis" (line 13, column 8),Token "LED" "../eis/minimumEis.eis" (line 13, column 16)),DecPart (Token "btt" "../eis/minimumEis.eis" (line 14, column 8),Token "Battery" "../eis/minimumEis.eis" (line 14, column 15)),DecPart (Token "cin" "../eis/minimumEis.eis" (line 15, column 8),Token "C" "../eis/minimumEis.eis" (line 15, column 15)),DecPart (Token "cout" "../eis/minimumEis.eis" (line 16, column 8),Token "C" "../eis/minimumEis.eis" (line 16, column 16)),DecPart (Token "reg" "../eis/minimumEis.eis" (line 17, column 8),Token "TA78033AF" "../eis/minimumEis.eis" (line 17, column 15)),DecPart (Token "cn" "../eis/minimumEis.eis" (line 18, column 8),Token "CONN2" "../eis/minimumEis.eis" (line 18, column 14)),DecItfc (Token "itfc" "../eis/minimumEis.eis" (line 20, column 13)),DecPart (Token "sw" "../eis/minimumEis.eis" (line 22, column 8),Token "NchFET" "../eis/minimumEis.eis" (line 22, column 14)),DecPart (Token "pdr" "../eis/minimumEis.eis" (line 23, column 8),Token "R" "../eis/minimumEis.eis" (line 23, column 15)),DecWire (Token "VCC" "../eis/minimumEis.eis" (line 25, column 8)),DecWire (Token "GND" "../eis/minimumEis.eis" (line 26, column 8)),ConExpr (Pin (Token "reg" "../eis/minimumEis.eis" (line 28, column 3)) (Token "VIN" "../eis/minimumEis.eis" (line 28, column 7)),[],Pin (Token "btt" "../eis/minimumEis.eis" (line 28, column 18)) (Token "Plus" "../eis/minimumEis.eis" (line 28, column 13))),ConExpr (Pin (Token "reg" "../eis/minimumEis.eis" (line 29, column 3)) (Token "GND" "../eis/minimumEis.eis" (line 29, column 7)),[],Wire (Token "itfc" "../eis/minimumEis.eis" (line 29, column 13))),ConExpr (Wire (Token "itfc" "../eis/minimumEis.eis" (line 30, column 3)),[],Wire (Token "GND" "../eis/minimumEis.eis" (line 30, column 10))),ConExpr (Pin (Token "btt" "../eis/minimumEis.eis" (line 31, column 3)) (Token "Minus" "../eis/minimumEis.eis" (line 31, column 7)),[],Wire (Token "GND" "../eis/minimumEis.eis" (line 31, column 15))),ConExpr (Pin (Token "reg" "../eis/minimumEis.eis" (line 32, column 3)) (Token "VIN" "../eis/minimumEis.eis" (line 32, column 7)),[BPin (Token "_1" "../eis/minimumEis.eis" (line 32, column 13)) (Token "cin" "../eis/minimumEis.eis" (line 32, column 16)) (Token "_2" "../eis/minimumEis.eis" (line 32, column 20))],Wire (Token "GND" "../eis/minimumEis.eis" (line 32, column 25))),ConExpr (Pin (Token "reg" "../eis/minimumEis.eis" (line 33, column 3)) (Token "VOUT" "../eis/minimumEis.eis" (line 33, column 7)),[BPin (Token "_1" "../eis/minimumEis.eis" (line 33, column 14)) (Token "cout" "../eis/minimumEis.eis" (line 33, column 17)) (Token "_2" "../eis/minimumEis.eis" (line 33, column 22))],Wire (Token "GND" "../eis/minimumEis.eis" (line 33, column 27))),ConExpr (Pin (Token "reg" "../eis/minimumEis.eis" (line 35, column 3)) (Token "VOUT" "../eis/minimumEis.eis" (line 35, column 7)),[],Wire (Token "VCC" "../eis/minimumEis.eis" (line 35, column 14))),ConExpr (Wire (Token "VCC" "../eis/minimumEis.eis" (line 36, column 3)),[BPin (Token "_1" "../eis/minimumEis.eis" (line 36, column 9)) (Token "r1" "../eis/minimumEis.eis" (line 36, column 12)) (Token "_2" "../eis/minimumEis.eis" (line 36, column 15)),BPin (Token "A" "../eis/minimumEis.eis" (line 36, column 20)) (Token "led1" "../eis/minimumEis.eis" (line 36, column 22)) (Token "K" "../eis/minimumEis.eis" (line 36, column 27)),BPin (Token "D" "../eis/minimumEis.eis" (line 36, column 31)) (Token "sw" "../eis/minimumEis.eis" (line 36, column 33)) (Token "S" "../eis/minimumEis.eis" (line 36, column 36))],Wire (Token "GND" "../eis/minimumEis.eis" (line 36, column 40))),ConExpr (Pin (Token "sw" "../eis/minimumEis.eis" (line 38, column 3)) (Token "G" "../eis/minimumEis.eis" (line 38, column 6)),[BPin (Token "_1" "../eis/minimumEis.eis" (line 38, column 10)) (Token "pdr" "../eis/minimumEis.eis" (line 38, column 13)) (Token "_2" "../eis/minimumEis.eis" (line 38, column 17)),BWire (Token "GND" "../eis/minimumEis.eis" (line 38, column 22))],Pin (Token "cn" "../eis/minimumEis.eis" (line 38, column 31)) (Token "_1" "../eis/minimumEis.eis" (line 38, column 28))),ConExpr (Pin (Token "sw" "../eis/minimumEis.eis" (line 39, column 3)) (Token "G" "../eis/minimumEis.eis" (line 39, column 6)),[],Pin (Token "cn" "../eis/minimumEis.eis" (line 39, column 13)) (Token "_2" "../eis/minimumEis.eis" (line 39, column 10)))]))]
+# EESchema Netlist
+(
+  ( 0001 $noname BTT1 Battery{Lib=btt}
+    ( 1 $$$00001)
+    ( 2 GND)
+  )
+  ( 0002 $noname C1 C{Lib=cin}
+    ( 1 $$$00001)
+    ( 2 GND)
+  )
+  ( 0003 $noname C2 C{Lib=cout}
+    ( 1 VCC)
+    ( 2 GND)
+  )
+  ( 0004 $noname CN1 CONN2{Lib=cn}
+    ( 1 GND)
+    ( 2 $$$00004)
+  )
+  ( 0005 $noname IC1 TA78033AF{Lib=reg}
+    ( 1 $$$00001)
+    ( 2 VCC)
+    ( 3 GND)
+  )
+  ( 0006 $noname LD1 LED{Lib=led1}
+    ( 1 $$$00002)
+    ( 2 $$$00003)
+  )
+  ( 0007 $noname Q1 NchFET{Lib=sw}
+    ( 1 $$$00004)
+    ( 2 GND)
+    ( 3 $$$00003)
+  )
+  ( 0008 $noname R1 R{Lib=r1}
+    ( 1 VCC)
+    ( 2 $$$00002)
+  )
+  ( 0009 $noname R2 R{Lib=pdr}
+    ( 1 $$$00004)
+    ( 2 GND)
+  )
+)
+*
+

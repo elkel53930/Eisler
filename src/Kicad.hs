@@ -42,6 +42,7 @@ changeStyle origin net = origin ++ (netToPortInfo wire . elems . snd $ getNet ne
 
 netToPortInfo :: WireName -> [Connectable] -> [PortInfo]
 netToPortInfo _ [] = []
+netToPortInfo wire ((ConItfc _):cs) = netToPortInfo wire cs
 netToPortInfo wire (c:cs) = (PortInfo ref comp part port wire) : netToPortInfo wire cs where
   comp = getToken compIden
   port = getToken portIntLit

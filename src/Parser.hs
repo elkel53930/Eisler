@@ -6,14 +6,15 @@ import Text.Parsec.Pos
 import Text.Parsec.Char
 
 data Cnct = Pin CompIden PortIden
-          | Wire WireIden  deriving Show
+          | Wire WireIden deriving Show
 data BCnct = BPin PortIden CompIden PortIden
-           | BWire WireIden  deriving Show
+           | BWire WireIden deriving Show
 
 data Token a = Token a SourcePos deriving Show
 type Identify = Token String
 type IntLit = Token Int
 type WireIden = Identify
+type ItfcIden = Identify
 type PartIden = Identify
 type PortIntLit = IntLit
 type PortIden = Identify
@@ -41,6 +42,7 @@ data SourceElement = Import FilePath
 data ModuleElement = DecMod DeclareModule
                    | DecPart DeclarePart
                    | DecWire WireIden
+                   | DecItfc ItfcIden
                    | ConExpr ConnectExpression deriving Show
 
 instance Eq a => Eq (Token a) where
@@ -58,6 +60,7 @@ kwdDecMod = "module"
 kwdAs = "as"
 kwdImport = "import"
 kwdDecWire = "wire"
+kwdDecItfc = "interface"
 
 showPos :: Token a -> String
 showPos (Token _ pos) = show pos
@@ -70,9 +73,6 @@ newToken a = Token a $ newPos "Internal" 0 0
 
 (.==) :: Eq a => Token a -> a -> Bool
 (Token x _) .== y = x == y
-
-concatIden :: String -> Identify -> Identify
-concatIden pre (Token name pos) = Token (pre++name) pos
 
 parseEisFile :: FilePath -> IO(Either ParseError [SourceElement])
 parseEisFile filepath = parseEisFiles [filepath] []
@@ -125,6 +125,7 @@ defModule = do
   charSp '{'
   elems <- many ( try decWire <|>
                   try decPart <|>
+                  try decItfc <|>
                   conExpr)
   charSp '}'
   return $ DefMod (m, (ps, elems))
@@ -180,6 +181,13 @@ decWire = do
   w <- iden
   charSp ';'
   return $ DecWire w
+
+decItfc :: Parser ModuleElement
+decItfc = do
+  stringSp kwdDecItfc
+  i <- iden
+  charSp ';'
+  return $ DecItfc i
 
 decModule :: Parser ModuleElement
 decModule = do
