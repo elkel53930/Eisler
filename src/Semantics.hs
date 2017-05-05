@@ -15,39 +15,12 @@ data Connectable = ConWire WireIden
 type ErrorMsg = String
 type Result = Either ErrorMsg
 
-expandModules :: [ModuleElement] -> String -> [ModuleElement]
-expandModules [] _ = []
-expandModules (m:ms) suf =
-  case m of
-    DecPart (comp,part) -> DecPart (addSuffix comp suf,part) : expandModules ms suf
-    DecWire w           -> (DecWire $ addSuffix w suf) : expandModules ms suf
-    ConExpr c           -> (ConExpr $ mangleCe suf c) : expandModules ms suf
-
-mangleCe :: String -> ConnectExpression -> ConnectExpression
-mangleCe suf (cl,bs,cr) = (mangleC suf cl, mangleBcs suf bs, mangleC suf cr)
-
-mangleBcs :: String -> [BCnct] -> [BCnct]
-mangleBcs _ [] = []
-mangleBcs suf (b:bs) =
-  case b of
-    BPin pl c pr -> BPin pl (addSuffix c suf) pr : mangleBcs suf bs
-    BWire w      -> BWire (addSuffix w suf)      : mangleBcs suf bs
-
-mangleC :: String -> Cnct -> Cnct
-mangleC suf c =
-  case c of
-    Pin c p -> Pin (addSuffix c suf) p
-    Wire w  -> Wire $ addSuffix w suf
-
-addSuffix :: Identify -> String -> Identify
-addSuffix (Token name pos) suf = Token (name ++ "@" ++ suf) pos
-
 moduleNet :: [SourceElement] -> ModuleName -> Result [(Connectable,Connectable)]
 moduleNet parsed name = do
   srcElems <- checkOverlap parsed name
   (_,(_,modElems)) <- searchMod (snd $ divideSrc srcElems) name
-  let cncts = expansionaCnct . pickupConExpr $ modElems
-  convertToPort modElems (fst $ divideSrc srcElems) cncts
+  let modElems' = prefixMod modElems ( '@' : name )
+  convertToPort modElems' (fst $ divideSrc srcElems) $ expansionCnct . pickupConExpr $ modElems'
 
 getRef :: Connectable -> Reference
 getRef (ConPort _ _ ref _) = ref
@@ -86,6 +59,32 @@ getOverlapsError ts =
   concat $ map (\token -> (showPos token)
                    ++ "\n\tMultiple Declarations of '"
                    ++ getToken token ++ "'\n" ) ts
+
+-- Module内の識別子にサフィックスをつける
+prefixMod :: [ModuleElement] -> String -> [ModuleElement]
+prefixMod [] _ = []
+prefixMod (m:ms) suf = m' : ( prefixMod ms suf ) where
+   m' = case m of
+      DecMod  (c,m) -> DecMod  (prefixIden c suf,m)
+      DecPart (c,p) -> DecPart (prefixIden c suf,p)
+      DecWire w     -> DecWire $ prefixIden w suf
+      DecItfc i     -> DecItfc $ prefixIden i suf
+      ConExpr (cr,bs,cl) ->
+        ConExpr (prefixCnct cr suf, prefixBCnct bs suf, prefixCnct cl suf)
+
+prefixCnct :: Cnct -> String -> Cnct
+prefixCnct (Pin c p) suf = Pin (prefixIden c suf) p
+prefixCnct (Wire w)  suf = Wire $ prefixIden w suf
+
+prefixBCnct :: [BCnct] -> String -> [BCnct]
+prefixBCnct [] _ = []
+prefixBCnct (b:bs) suf = b' : (prefixBCnct bs suf) where
+  b' = case b of
+    BPin pr c pl -> BPin pr (prefixIden c suf) pl
+    BWire w      -> BWire $ prefixIden w suf
+
+prefixIden :: Identify -> String -> Identify
+prefixIden (Token name pos) suff = Token (name++suff) pos
 
 -- -- -- -- divide -- -- -- --
 
@@ -132,9 +131,10 @@ searchMod defMods name =
 
 -- -- -- -- expansion -- -- -- --
 
-expansionaCnct :: [ConnectExpression] -> [(Cnct,Cnct)]
-expansionaCnct [] = []
-expansionaCnct (c:cs) = convertCnct c ++ expansionaCnct cs
+-- CnctとBCnctが混在したConnectExpressionを、Cnct x2のタプルに変換する
+expansionCnct :: [ConnectExpression] -> [(Cnct,Cnct)]
+expansionCnct [] = []
+expansionCnct (c:cs) = convertCnct c ++ expansionCnct cs
 
 convertCnct :: ConnectExpression -> [(Cnct,Cnct)]
 convertCnct (cl, [], cr) = [(cl,cr)]
@@ -216,6 +216,7 @@ cnctToConnectable modElems _ (Wire wireIden) = do
     Just w  -> Right $ ConWire wireIden
 
 -- Port > Wire > Itfc
+-- リファレンスプリフィックスでOrdering
 ordRef :: Connectable -> Connectable -> Ordering
 ordRef x@(ConPort _ _ _ _) y@(ConPort _ _ _ _) = compare (getRef x) (getRef y)
 ordRef (ConPort _ _ _ _) (ConWire _) = GT
@@ -227,9 +228,11 @@ ordRef (ConItfc _) (ConPort _ _ _ _) = LT
 ordRef (ConPort _ _ _ _) (ConItfc _) = GT
 ordRef (ConItfc x) (ConItfc y) = compare x y
 
+-- リファレンスプリフィックスが等しいか
 eqRef :: Connectable -> Connectable -> Bool
 eqRef pl pr = (==EQ) $ ordRef pl pr
 
+-- コンポーネントが等しいか
 eqComp :: Connectable -> Connectable -> Bool
 eqComp (ConPort x _ _ _) (ConPort y _ _ _) = x == y
 eqComp (ConPort _ _ _ _) (ConWire _) = False
@@ -246,10 +249,10 @@ referencing :: [(Connectable,Connectable)] -> [(Connectable,Connectable)]
 referencing ps = map (renameRef dic) ps
   where
     dic = termRef
-        . groupBy eqRef
-        . sortBy ordRef
-        . nubBy eqComp
-        $ expandTuple ps
+        . groupBy eqRef  -- リファレンスプリフィックスでグルーピング
+        . sortBy ordRef  -- リファレンスプリフィックスでソート
+        . nubBy eqComp   -- 同じコンポーネントは削除
+        $ expandTuple ps -- タプルを分解
 
 termRef :: [[Connectable]] -> [(CompIden,Reference)]
 termRef [] = []
@@ -258,8 +261,7 @@ termRef (ps:pss) = termRef_ ps 1 ++ (termRef pss)
 termRef_ :: [Connectable] -> Int -> [(CompIden,Reference)]
 termRef_ [] _ = []
 termRef_ ((ConPort c _ r _):ps) n = (c,r ++ (show n)) : (termRef_ ps $ n + 1)
-termRef_ (ConWire w:ps) n = termRef_ ps $ n
-termRef_ (ConItfc i:ps) n = termRef_ ps $ n
+termRef_ (_:ps) n = termRef_ ps n
 
 expandTuple :: [(a,a)] -> [a]
 expandTuple [] = []
@@ -274,8 +276,7 @@ renameRefSingle ((c,r):ts) port@(ConPort pc pp pr ppa) =
   if pc == c
     then ConPort pc pp r ppa
     else renameRefSingle ts port
-renameRefSingle _ (ConWire w) = ConWire w
-renameRefSingle _ (ConItfc i) = ConItfc i
+renameRefSingle _ x = id x  -- Wire and Itfc
 
 combineConnectables :: [Net] -> [(Connectable,Connectable)] -> Result [Net]
 combineConnectables _ [] = Right []

@@ -4,6 +4,7 @@ defpart Battery(1:Plus 2:Minus){ref "BTT";}
 defpart TA78033AF(1:VIN  2:VOUT  3:GND){ref "IC";}
 defpart LargeLED(1:A 2:K) {ref "LD";}
 defpart CONN2(1:_1 2:_2){ref "CN";}
+defpart HOLE(1:_1){ref "HL";}
 
 /*This is comment out*/
 
@@ -16,6 +17,7 @@ defmodule main()
   part cout as C;
   part reg as TA78033AF;
   part cn as CONN2;
+  part hole1 as HOLE;
 
   interface itfc;
   interface a;

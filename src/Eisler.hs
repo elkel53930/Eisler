@@ -17,16 +17,13 @@ main = do
 
 translate args = do
   -- IO
-  let sourceName = head args
-  result <- P.parseEisFile sourceName
+  result <- P.parseEisFile $ head args
   case result of
     Right parsed -> case do
       -- Result = Either ErrorMsg
       ports <- S.moduleNet parsed "main"
-      let refed = S.referencing ports
-      nets <- S.combineConnectables [] refed
-      let named = S.namingWire nets 1
-      Right $ Kicad.output named of
+      nets <- S.combineConnectables [] $ S.referencing ports
+      Right $ Kicad.output ( S.namingWire nets 1 ) of
         Right kicad -> putStrLn kicad
         Left l      -> putStrLn l
     Left err -> putStrLn $ show err
