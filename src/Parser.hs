@@ -126,6 +126,7 @@ defModule = do
   elems <- many ( try decWire <|>
                   try decPart <|>
                   try decItfc <|>
+                  try decModule <|>
                   conExpr)
   charSp '}'
   return $ DefMod (m, (ps, elems))

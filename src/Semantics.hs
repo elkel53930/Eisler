@@ -14,12 +14,14 @@ data Connectable = ConWire WireIden
                  | ConPort CompIden PortIntLit Reference PartIden deriving (Show,Eq,Ord)
 type ErrorMsg = String
 type Result = Either ErrorMsg
+type Suffix = String
 
 moduleNet :: [SourceElement] -> ModuleName -> Result [(Connectable,Connectable)]
 moduleNet parsed name = do
   srcElems <- checkOverlap parsed name
   (_,(_,modElems)) <- searchMod (snd $ divideSrc srcElems) name
-  let modElems' = prefixMod modElems ( '@' : name )
+  modElems' <- expandModuleElements srcElems [name] modElems ( '@' : name )
+--  Left $ show modElems'
   convertToPort modElems' (fst $ divideSrc srcElems) $ expansionCnct . pickupConExpr $ modElems'
 
 getRef :: Connectable -> Reference
@@ -60,31 +62,42 @@ getOverlapsError ts =
                    ++ "\n\tMultiple Declarations of '"
                    ++ getToken token ++ "'\n" ) ts
 
+expandSubModules :: Suffix -> [ModuleName] -> [SourceElement] -> DefineModule -> Result [ModuleElement]
+expandSubModules suf mns srcElems (iden, (ports,modElems)) = do
+  case elem (getToken iden) mns of
+    True -> Left $ (showPos iden) ++ "\n\tModule '" ++ (getToken iden) ++ "' is used recursively."
+    False -> (++) <$> (Right $ expandPort suf ports) <*> (expandModuleElements srcElems (getToken iden : mns) modElems suf)
+
+expandPort :: Suffix -> [(PortIntLit,PortIden)] -> [ModuleElement]
+expandPort _ [] = []
+expandPort suf ((num,iden):ps) =
+  (DecItfc $ suffixIden iden suf) : expandPort suf ps
+
 -- Module内の識別子にサフィックスをつける
-prefixMod :: [ModuleElement] -> String -> [ModuleElement]
-prefixMod [] _ = []
-prefixMod (m:ms) suf = m' : ( prefixMod ms suf ) where
+expandModuleElements :: [SourceElement] -> [ModuleName] -> [ModuleElement] -> Suffix -> Result [ModuleElement]
+expandModuleElements _ _ [] _ = Right []
+expandModuleElements srcElems mns (m:ms) suf = (++) <$> m' <*> ( expandModuleElements srcElems mns ms suf ) where
    m' = case m of
-      DecMod  (c,m) -> DecMod  (prefixIden c suf,m)
-      DecPart (c,p) -> DecPart (prefixIden c suf,p)
-      DecWire w     -> DecWire $ prefixIden w suf
-      DecItfc i     -> DecItfc $ prefixIden i suf
+      DecMod  (c,m) -> searchMod (snd $ divideSrc srcElems) (getToken m) >>= expandSubModules ("@" ++ (getToken c) ++ suf) mns srcElems
+      DecPart (c,p) -> Right [DecPart (suffixIden c suf,p)]
+      DecWire w     -> Right [DecWire $ suffixIden w suf]
+      DecItfc i     -> Right [DecItfc $ suffixIden i suf]
       ConExpr (cr,bs,cl) ->
-        ConExpr (prefixCnct cr suf, prefixBCnct bs suf, prefixCnct cl suf)
+        Right [ConExpr (suffixCnct cr suf, suffixBCnct bs suf, suffixCnct cl suf)]
 
-prefixCnct :: Cnct -> String -> Cnct
-prefixCnct (Pin c p) suf = Pin (prefixIden c suf) p
-prefixCnct (Wire w)  suf = Wire $ prefixIden w suf
+suffixCnct :: Cnct -> Suffix -> Cnct
+suffixCnct (Pin c p) suf = Pin (suffixIden c suf) p
+suffixCnct (Wire w)  suf = Wire $ suffixIden w suf
 
-prefixBCnct :: [BCnct] -> String -> [BCnct]
-prefixBCnct [] _ = []
-prefixBCnct (b:bs) suf = b' : (prefixBCnct bs suf) where
+suffixBCnct :: [BCnct] -> Suffix -> [BCnct]
+suffixBCnct [] _ = []
+suffixBCnct (b:bs) suf = b' : (suffixBCnct bs suf) where
   b' = case b of
-    BPin pr c pl -> BPin pr (prefixIden c suf) pl
-    BWire w      -> BWire $ prefixIden w suf
+    BPin pr c pl -> BPin pr (suffixIden c suf) pl
+    BWire w      -> BWire $ suffixIden w suf
 
-prefixIden :: Identify -> String -> Identify
-prefixIden (Token name pos) suff = Token (name++suff) pos
+suffixIden :: Identify -> Suffix -> Identify
+suffixIden (Token name pos) suff = Token (name++suff) pos
 
 -- -- -- -- divide -- -- -- --
 
@@ -203,15 +216,20 @@ searchWire wire modElems =
 -}
 cnctToConnectable :: [ModuleElement] -> [DefinePart] -> Cnct -> Result Connectable
 cnctToConnectable modElems defParts (Pin compIden portIden) = do
-  partIden <- searchComp compIden $ pickupDecPart modElems
-  partInfo <- searchPart partIden defParts
-  portIntLit <- searchPort portIden (fst partInfo)
-  Right (ConPort compIden portIntLit (snd partInfo) partIden)
+  case searchComp compIden $ pickupDecPart modElems of
+    Left msg -> case searchItfc (suffixIden portIden $ '@' : getToken compIden) modElems of
+      Nothing -> Left msg
+      Just i  -> Right $ ConItfc (suffixIden portIden $ getToken compIden)
+    Right p -> do
+      partIden <- searchComp compIden $ pickupDecPart modElems
+      partInfo <- searchPart partIden defParts
+      portIntLit <- searchPort portIden (fst partInfo)
+      Right (ConPort compIden portIntLit (snd partInfo) partIden)
 cnctToConnectable modElems _ (Wire wireIden) = do
   -- DecWireとDecItfcの中から該当するものがあるかどうか探す
   case searchWire wireIden modElems of
     Nothing -> case searchItfc wireIden modElems of
-      Nothing -> Left $ showPos wireIden ++  "\n\t'" ++ getToken wireIden ++ " is not definded."
+      Nothing -> Left $ showPos wireIden ++  "\n\t'" ++ getToken wireIden ++ "' is not defined."
       Just i  -> Right $ ConItfc wireIden
     Just w  -> Right $ ConWire wireIden
 
