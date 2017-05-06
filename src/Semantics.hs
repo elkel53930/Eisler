@@ -109,30 +109,24 @@ divideSrc ((DefMod m):ts) = (ps,m:ms) where
   (ps,ms) = divideSrc ts
 
 pickupDecPart :: [ModuleElement] -> [DeclarePart]
-pickupDecPart [] = []
-pickupDecPart ((DecPart p):ts) = p : pickupDecPart ts
-pickupDecPart (_:ts) = pickupDecPart ts
+pickupDecPart modElems = map(\(DecPart p) -> p) $ filter (\x -> case x of
+  DecPart p -> True
+  otherwise -> False) modElems
 
 pickupConExpr :: [ModuleElement] -> [ConnectExpression]
-pickupConExpr [] = []
-pickupConExpr ((ConExpr c):ts) = c : pickupConExpr ts
-pickupConExpr (_:ts) = pickupConExpr ts
+pickupConExpr modElems = map(\(ConExpr ce) -> ce) $ filter (\x -> case x of
+  ConExpr ce -> True
+  otherwise -> False) modElems
 
 pickupDecWire :: [ModuleElement] -> [WireIden]
-pickupDecWire [] = []
-pickupDecWire ((DecWire w):ts) = w : pickupDecWire ts
-pickupDecWire (_:ts) = pickupDecWire ts
-{-
-pickupDecMod :: [ModuleElement] -> [DeclareModule]
-pickupDecMod [] = []
-pickupDecMod ((DecMod m):ts) = m : pickupDecMod ts
-pickupDecMod (_:ts) = pickupDecMod ts
--}
+pickupDecWire modElems = map(\(DecWire w) -> w) $ filter (\x -> case x of
+  DecWire w -> True
+  otherwise -> False) modElems
 
 pickupDecItfc :: [ModuleElement] -> [ItfcIden]
-pickupDecItfc [] = []
-pickupDecItfc ((DecItfc i):ts) = i : pickupDecItfc ts
-pickupDecItfc (_:ts) = pickupDecItfc ts
+pickupDecItfc modElems = map(\(DecItfc i) -> i) $ filter (\x -> case x of
+  DecItfc i -> True
+  otherwise -> False) modElems
 
 -- -- -- --  search -- -- -- --
 
