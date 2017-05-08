@@ -1,59 +1,17 @@
 import "Basic.eis"
 
-defpart Battery(1:Plus 2:Minus){ref "BTT";}
-defpart TA78033AF(1:VIN  2:VOUT  3:GND){ref "IC";}
-defpart LargeLED(1:A 2:K) {ref "LD";}
-defpart CONN2(1:_1 2:_2){ref "CN";}
-
-
-/*!This is comment out*/
-
-/*
-defmodule sub()
-{
-  part r1 as R;
-  part led1 as LED;
-  part cin as C;
-
-  wire VCC;
-  wire GND;
-
-  cin._1 - VCC;
-  cin._2 - GND;
-
-  VCC - _1.r1._2 - A.led1.K - GND;
-}
-*/
-
 defmodule main()
 {
-  part r1 as R;
-  part led1 as LED;
-  part btt as Battery;
-  part cin as C;
-  part cout as C;
-  part reg as TA78033AF;
-  part cn as CONN2;
+  part r1 "10K 5% 1608" as R;
+  part r2 "10K 5% 1608" as R;
+  part c1 "0.1u X5R 2012" as C;
+  part c2 "0.1u X5R 2012" as C;
+  part c3 as C;
+  part c4 "100u 16V Cemi" as C;
 
-  part sw as NchFET;
-  part pdr as R;
+  c1._1 - _2.c2;
+  c2._1 - _2.c1;
 
-//  module sub as subModule;
-
-// wire declaration
-
-  wire VCC;
-  wire GND;
-
-  reg.VIN - Plus.btt;
-  reg.GND - GND;
-  btt.Minus - GND;
-  reg.VIN - _1.cin._2 - GND;
-  reg.VOUT - _1.cout._2 - GND;
-
-  reg.VOUT - VCC;
-  VCC - _1.r1._2 - A.led1.K - D.sw.S - GND;
-
-  sw.G - _1.pdr._2 - GND - _1.cn;
-  sw.G - _2.cn;
+  r1._1 - _2.r2;
+  r2._1 - _2.r1._1 - _1.c3._2 - _1.c4;
 }

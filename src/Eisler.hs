@@ -1,6 +1,7 @@
 import qualified Parser as P
 import qualified Semantics as S
 import qualified Kicad as Kicad
+import qualified Bom as Bom
 --import qualified Output as O
 import Common
 import Text.ParserCombinators.Parsec
@@ -23,6 +24,7 @@ translate args = do
       -- Result = Either ErrorMsg
       ports <- S.moduleNet parsed "main"
       nets <- S.combineConnectables [] $ S.referencing ports
+      Left . show $ Bom.bomShow nets
       Right $ Kicad.output ( S.namingWire nets 1 ) of
         Right kicad -> putStrLn kicad
         Left l      -> putStrLn l

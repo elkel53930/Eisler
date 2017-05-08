@@ -1,2 +1,1 @@
-"../eis/minimumEis.eis" (line 38, column 13)
-	Component 'subModule@main' is not declared.
+[[(Nothing,"C3")],[(Just (Token "0.1u X5R 2012" "minimumEis.eis" (line 7, column 11)),"C1"),(Just (Token "0.1u X5R 2012" "minimumEis.eis" (line 8, column 11)),"C2")],[(Just (Token "100u 16V Cemi" "minimumEis.eis" (line 10, column 11)),"C4")],[(Just (Token "10K 5% 1608" "minimumEis.eis" (line 5, column 11)),"R1"),(Just (Token "10K 5% 1608" "minimumEis.eis" (line 6, column 11)),"R2")]]

@@ -12,6 +12,7 @@ data BCnct = BPin PortIden CompIden PortIden
 
 data Token a = Token a SourcePos deriving Show
 type Identify = Token String
+type StrLit = Token String
 type IntLit = Token Int
 type WireIden = Identify
 type ItfcIden = Identify
@@ -20,6 +21,8 @@ type PortIntLit = IntLit
 type PortIden = Identify
 type ModuleIden = Identify
 type CompIden = Identify
+type PartType = StrLit
+type ImpFile = StrLit
 
 type Reference = String
 type WireName = String
@@ -31,11 +34,11 @@ type CompName = String
 
 type DefinePart = (PartIden, ([(PortIntLit,PortIden)], Reference))
 type DefineModule = (ModuleIden, ([(PortIntLit,PortIden)], [ModuleElement]))
-type DeclarePart = (CompIden, PartIden)
+type DeclarePart = (CompIden, PartIden, Maybe PartType)
 type DeclareModule = (CompIden, ModuleIden)
 type ConnectExpression = (Cnct, [BCnct], Cnct)
 
-data SourceElement = Import FilePath
+data SourceElement = Import ImpFile
                    | DefPart DefinePart
                    | DefMod DefineModule deriving Show
 
@@ -75,11 +78,11 @@ newToken a = Token a $ newPos "Internal" 0 0
 (Token x _) .== y = x == y
 
 parseEisFile :: FilePath -> IO(Either ParseError [SourceElement])
-parseEisFile filepath = parseEisFiles [filepath] []
+parseEisFile filepath = parseEisFiles [newToken filepath] []
 
-parseEisFiles :: [FilePath] -> [SourceElement] -> IO(Either ParseError [SourceElement])
+parseEisFiles :: [ImpFile] -> [SourceElement] -> IO(Either ParseError [SourceElement])
 parseEisFiles [] srcElems = return $ Right srcElems
-parseEisFiles (file:fs) srcElems = do
+parseEisFiles (f:fs) srcElems = do
   handle <- openFile file ReadMode
   source <- hGetContents handle
   case parse eislerFile file source of
@@ -92,9 +95,10 @@ parseEisFiles (file:fs) srcElems = do
         childlen = pickupImport (parsed++srcElems)
         elements = pickupNotImport (parsed++srcElems)
     Left err -> return $ Left err
+  where file = getToken f
 
 
-pickupImport :: [SourceElement] -> [FilePath]
+pickupImport :: [SourceElement] -> [ImpFile]
 pickupImport srcElems =
   map (\(Import file) -> file) $ filter (\x -> case x of
     Import file -> True
@@ -154,7 +158,7 @@ partRef = do
   stringSp "ref"
   result <- strLit
   charSp ';'
-  return result
+  return $ getToken result
 
 port :: Parser (PortIntLit,PortIden)
 port = do
@@ -171,10 +175,11 @@ decPart :: Parser ModuleElement
 decPart = do
   stringSp kwdDecPart
   c <- iden
+  t <- optionMaybe strLit
   stringSp kwdAs
   p <- iden
   charSp ';'
-  return $ DecPart (c,p)
+  return $ DecPart (c,p,t)
 
 decWire :: Parser ModuleElement
 decWire = do
@@ -263,14 +268,15 @@ conExpr = do
   Common
 -}
 
-strLit :: Parser String
+strLit :: Parser StrLit
 strLit = do
   spcmnt
+  pos <- getPosition
   char '"'
   result <- many $ noneOf "\""
   char '"'
   spcmnt
-  return result
+  return $ Token result pos
 
 intLit :: Parser IntLit
 intLit = do

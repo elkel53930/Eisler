@@ -47,4 +47,4 @@ netToPortInfo wire (c:cs) = (PortInfo ref comp part port wire) : netToPortInfo w
   comp = getToken compIden
   port = getToken portIntLit
   part = getToken partIden
-  ConPort compIden portIntLit ref partIden = c
+  ConPort compIden portIntLit ref partIden _ = c

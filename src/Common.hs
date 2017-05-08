@@ -11,7 +11,10 @@ lookupWith f (a:as) =
     else lookupWith f as
 
 justSnd = Just . snd
-justFst = Just .fst
+justFst = Just . fst
+
+cutFst3 (_,x,y) = (x,y)
+justCutFst3 = Just . cutFst3
 
 eqFst :: Eq a => a -> (a,b) -> Bool
 eqFst x (y,_) = x == y
