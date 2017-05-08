@@ -1,0 +1,27 @@
+# EESchema Netlist
+(
+  ( 0001 $noname C1 C{Lib=c1@main}
+    ( 1 $$$00001)
+    ( 2 $$$00002)
+  )
+  ( 0002 $noname C2 C{Lib=c2@main}
+    ( 1 $$$00002)
+    ( 2 $$$00001)
+  )
+  ( 0003 $noname C3 C{Lib=c3@main}
+    ( 1 $$$00003)
+    ( 2 $$$00005)
+  )
+  ( 0004 $noname C4 C{Lib=c4@main}
+    ( 1 $$$00005)
+  )
+  ( 0005 $noname R1 R{Lib=r1@main}
+    ( 1 $$$00003)
+    ( 2 $$$00004)
+  )
+  ( 0006 $noname R2 R{Lib=r2@main}
+    ( 1 $$$00004)
+    ( 2 $$$00003)
+  )
+)
+*

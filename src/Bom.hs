@@ -16,9 +16,7 @@ bomShow =
   . nub
   . sort
   . map (\(ConPort _ _ ref _ pt) -> (pt,ref))
-  . filter (\x -> case x of
-    ConPort _ _ _ _ _ -> True
-    otherwise -> False)
+  . filter isConPort
   . Set.elems
   . foldl Set.union Set.empty
   . map (\x -> snd . getNet $ x)
@@ -33,3 +31,8 @@ showBom all@((pt,_):xs) = (concat $ map (flip(++) " " . snd) all) ++ case pt of
 
 index :: [String]
 index = map (flip(++) ".," . show) [1..]
+
+isConPort :: Connectable -> Bool
+isConPort x = case x of
+  ConPort _ _ _ _ _ -> True
+  otherwise -> False

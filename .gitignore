@@ -2,5 +2,7 @@
 *.o
 *.exe
 *.tmp
+*.net
+*.csv
 src/Eisler
 src/experiment.hs
