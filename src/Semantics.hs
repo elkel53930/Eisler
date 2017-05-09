@@ -53,7 +53,7 @@ getIdensMod (t:ts) =
     DecPart (cname, _, _) -> cname ++ (getIdensMod ts)
     DecWire (wname   ) -> wname ++ (getIdensMod ts)
     DecMod  (mname, _) -> mname : (getIdensMod ts)
-    DecItfc (iname   ) -> iname : (getIdensMod ts)
+    DecItfc (iname   ) -> iname ++ (getIdensMod ts)
     ConExpr _ -> getIdensMod ts
 
 getOverlapsError :: [Token String] -> String
@@ -71,7 +71,7 @@ expandSubModules suf mns srcElems (iden, (ports,modElems)) = do
 expandPort :: Suffix -> [(PortIntLit,PortIden)] -> [ModuleElement]
 expandPort _ [] = []
 expandPort suf ((num,iden):ps) =
-  (DecItfc $ suffixIden suf iden) : expandPort suf ps
+  (DecItfc $ [suffixIden suf iden]) : expandPort suf ps
 
 -- Module内の識別子にサフィックスをつける
 expandModuleElements :: [SourceElement] -> [ModuleName] -> [ModuleElement] -> Suffix -> Result [ModuleElement]
@@ -81,7 +81,7 @@ expandModuleElements srcElems mns (m:ms) suf = (++) <$> m' <*> ( expandModuleEle
       DecMod  (c,m)  -> searchMod (snd $ divideSrc srcElems) (getToken m) >>= expandSubModules ("@" ++ (getToken c) ++ suf) mns srcElems
       DecPart (c,p,t)-> Right [DecPart (map (suffixIden suf) c,p,t)]
       DecWire w      -> Right [DecWire $ map (suffixIden suf) w]
-      DecItfc i      -> Right [DecItfc $ suffixIden suf i]
+      DecItfc i      -> Right [DecItfc $ map( suffixIden suf) i]
       ConExpr (cr,bs,cl) ->
         Right [ConExpr (suffixCnct cr suf, suffixBCnct bs suf, suffixCnct cl suf)]
 
@@ -115,7 +115,7 @@ pickupDecPart modElems = map(\(DecPart p) -> p) $ filter (\x -> case x of
 
 pickupConExpr :: [ModuleElement] -> [ConnectExpression]
 pickupConExpr modElems = map(\(ConExpr ce) -> ce) $ filter (\x -> case x of
-  ConExpr ce -> True
+  ConExpr _ -> True
   otherwise -> False) modElems
 
 pickupDecWire :: [ModuleElement] -> [WireIden]
@@ -124,8 +124,8 @@ pickupDecWire modElems = concat . map(\(DecWire w) -> w) $ filter (\x -> case x 
   otherwise -> False) modElems
 
 pickupDecItfc :: [ModuleElement] -> [ItfcIden]
-pickupDecItfc modElems = map(\(DecItfc i) -> i) $ filter (\x -> case x of
-  DecItfc i -> True
+pickupDecItfc modElems = concat. map(\(DecItfc i) -> i) $ filter (\x -> case x of
+  DecItfc _ -> True
   otherwise -> False) modElems
 
 -- -- -- --  search -- -- -- --

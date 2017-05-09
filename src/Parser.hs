@@ -45,7 +45,7 @@ data SourceElement = Import ImpFile
 data ModuleElement = DecMod DeclareModule
                    | DecPart DeclarePart
                    | DecWire [WireIden]
-                   | DecItfc ItfcIden
+                   | DecItfc [ItfcIden]
                    | ConExpr ConnectExpression deriving Show
 
 instance Eq a => Eq (Token a) where
@@ -191,7 +191,7 @@ decWire = do
 decItfc :: Parser ModuleElement
 decItfc = do
   stringSp kwdDecItfc
-  i <- iden
+  i <- sepBy1 iden $ char ','
   charSp ';'
   return $ DecItfc i
 

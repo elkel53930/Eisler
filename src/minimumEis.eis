@@ -2,9 +2,12 @@ import "Basic.eis"
 
 defmodule main()
 {
-  part r1,r2 "10K 5% 1608" as R;
+  part r0,r1 "10K 5% 1608" as R;
 
   wire VCC,GND;
+  interface i1,i2;
 
-  VCC - _2.r1._1 - _2.r2._1 - GND;
+  VCC - i1;
+  i1 - _2.r1._1 - _2.r0._1 - i2;
+  i2 - GND;
 }
