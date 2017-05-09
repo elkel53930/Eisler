@@ -34,7 +34,7 @@ type CompName = String
 
 type DefinePart = (PartIden, ([(PortIntLit,PortIden)], Reference))
 type DefineModule = (ModuleIden, ([(PortIntLit,PortIden)], [ModuleElement]))
-type DeclarePart = (CompIden, PartIden, Maybe PartType)
+type DeclarePart = ([CompIden], PartIden, Maybe PartType)
 type DeclareModule = (CompIden, ModuleIden)
 type ConnectExpression = (Cnct, [BCnct], Cnct)
 
@@ -174,7 +174,7 @@ port = do
 decPart :: Parser ModuleElement
 decPart = do
   stringSp kwdDecPart
-  c <- iden
+  c <- sepBy iden $ char ','
   t <- optionMaybe strLit
   stringSp kwdAs
   p <- iden

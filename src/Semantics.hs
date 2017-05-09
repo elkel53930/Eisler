@@ -50,7 +50,7 @@ getIdensMod :: [ModuleElement] -> [Token String]
 getIdensMod [] = []
 getIdensMod (t:ts) =
   case t of
-    DecPart (cname, _, _) -> cname : (getIdensMod ts)
+    DecPart (cname, _, _) -> cname ++ (getIdensMod ts)
     DecWire (wname   ) -> wname : (getIdensMod ts)
     DecMod  (mname, _) -> mname : (getIdensMod ts)
     DecItfc (iname   ) -> iname : (getIdensMod ts)
@@ -71,7 +71,7 @@ expandSubModules suf mns srcElems (iden, (ports,modElems)) = do
 expandPort :: Suffix -> [(PortIntLit,PortIden)] -> [ModuleElement]
 expandPort _ [] = []
 expandPort suf ((num,iden):ps) =
-  (DecItfc $ suffixIden iden suf) : expandPort suf ps
+  (DecItfc $ suffixIden suf iden) : expandPort suf ps
 
 -- Module内の識別子にサフィックスをつける
 expandModuleElements :: [SourceElement] -> [ModuleName] -> [ModuleElement] -> Suffix -> Result [ModuleElement]
@@ -79,25 +79,25 @@ expandModuleElements _ _ [] _ = Right []
 expandModuleElements srcElems mns (m:ms) suf = (++) <$> m' <*> ( expandModuleElements srcElems mns ms suf ) where
    m' = case m of
       DecMod  (c,m)  -> searchMod (snd $ divideSrc srcElems) (getToken m) >>= expandSubModules ("@" ++ (getToken c) ++ suf) mns srcElems
-      DecPart (c,p,t)-> Right [DecPart (suffixIden c suf,p,t)]
-      DecWire w      -> Right [DecWire $ suffixIden w suf]
-      DecItfc i      -> Right [DecItfc $ suffixIden i suf]
+      DecPart (c,p,t)-> Right [DecPart (map (suffixIden suf) c,p,t)]
+      DecWire w      -> Right [DecWire $ suffixIden suf w]
+      DecItfc i      -> Right [DecItfc $ suffixIden suf i]
       ConExpr (cr,bs,cl) ->
         Right [ConExpr (suffixCnct cr suf, suffixBCnct bs suf, suffixCnct cl suf)]
 
 suffixCnct :: Cnct -> Suffix -> Cnct
-suffixCnct (Pin c p) suf = Pin (suffixIden c suf) p
-suffixCnct (Wire w)  suf = Wire $ suffixIden w suf
+suffixCnct (Pin c p) suf = Pin (suffixIden suf c) p
+suffixCnct (Wire w)  suf = Wire $ suffixIden suf w
 
 suffixBCnct :: [BCnct] -> Suffix -> [BCnct]
 suffixBCnct [] _ = []
 suffixBCnct (b:bs) suf = b' : (suffixBCnct bs suf) where
   b' = case b of
-    BPin pr c pl -> BPin pr (suffixIden c suf) pl
-    BWire w      -> BWire $ suffixIden w suf
+    BPin pr c pl -> BPin pr (suffixIden suf c) pl
+    BWire w      -> BWire $ suffixIden suf w
 
-suffixIden :: Identify -> Suffix -> Identify
-suffixIden (Token name pos) suff = Token (name++suff) pos
+suffixIden :: Suffix -> Identify -> Identify
+suffixIden suff (Token name pos) = Token (name++suff) pos
 
 -- -- -- -- divide -- -- -- --
 
@@ -171,7 +171,7 @@ convertToPort modElems defParts ((cl,cr):cs) = do
 
 searchComp :: CompIden -> [DeclarePart] -> Result (PartIden,Maybe PartType)
 searchComp comp decParts =
-  case lookupWith (\(x,_,_)->x==comp) decParts >>= justCutFst3 of
+  case lookupWith (\(x,_,_)->elem comp x) decParts >>= justCutFst3 of
     Just part -> Right part
     Nothing -> Left $ showPos comp ++ "\n\tComponent '" ++ getToken comp ++ "' is not declared."
 
@@ -211,9 +211,9 @@ searchWire wire modElems =
 cnctToConnectable :: [ModuleElement] -> [DefinePart] -> Cnct -> Result Connectable
 cnctToConnectable modElems defParts (Pin compIden portIden) = do
   case searchComp compIden $ pickupDecPart modElems of
-    Left msg -> case searchItfc (suffixIden portIden $ '@' : getToken compIden) modElems of
+    Left msg -> case searchItfc (suffixIden ('@' : getToken compIden) portIden) modElems of
       Nothing -> Left msg
-      Just i  -> Right $ ConItfc (suffixIden portIden $ '@' : getToken compIden)
+      Just i  -> Right $ ConItfc (suffixIden ('@' : getToken compIden) portIden)
     Right p -> do
       (partIden, partType) <- searchComp compIden $ pickupDecPart modElems
       partInfo <- searchPart partIden defParts

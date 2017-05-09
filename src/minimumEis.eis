@@ -2,16 +2,7 @@ import "Basic.eis"
 
 defmodule main()
 {
-  part r1 "10K 5% 1608" as R;
-  part r2 "10K 5% 1608" as R;
-  part c1 "0.1u X5R 2012" as C;
-  part c2 "0.1u X5R 2012" as C;
-  part c3 as C;
-  part c4 "100u 16V Cemi" as C;
-
-  c1._1 - _2.c2;
-  c2._1 - _2.c1;
+  part r1,r2 "10K 5% 1608" as R;
 
   r1._1 - _2.r2;
-  r2._1 - _2.r1._1 - _1.c3._2 - _1.c4;
 }
