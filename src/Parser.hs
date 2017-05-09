@@ -174,7 +174,7 @@ port = do
 decPart :: Parser ModuleElement
 decPart = do
   stringSp kwdDecPart
-  c <- sepBy iden $ char ','
+  c <- sepBy1 iden $ char ','
   t <- optionMaybe strLit
   stringSp kwdAs
   p <- iden
