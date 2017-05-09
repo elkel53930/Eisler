@@ -213,7 +213,7 @@ cnctToConnectable modElems defParts (Pin compIden portIden) = do
   case searchComp compIden $ pickupDecPart modElems of
     Left msg -> case searchItfc (suffixIden portIden $ '@' : getToken compIden) modElems of
       Nothing -> Left msg
-      Just i  -> Right $ ConItfc (suffixIden portIden $ getToken compIden)
+      Just i  -> Right $ ConItfc (suffixIden portIden $ '@' : getToken compIden)
     Right p -> do
       (partIden, partType) <- searchComp compIden $ pickupDecPart modElems
       partInfo <- searchPart partIden defParts
