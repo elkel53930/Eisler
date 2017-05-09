@@ -52,7 +52,7 @@ getIdensMod (t:ts) =
   case t of
     DecPart (cname, _, _) -> cname ++ (getIdensMod ts)
     DecWire (wname   ) -> wname ++ (getIdensMod ts)
-    DecMod  (mname, _) -> mname : (getIdensMod ts)
+    DecMod  (mname, _) -> mname ++ (getIdensMod ts)
     DecItfc (iname   ) -> iname ++ (getIdensMod ts)
     ConExpr _ -> getIdensMod ts
 
@@ -73,12 +73,18 @@ expandPort _ [] = []
 expandPort suf ((num,iden):ps) =
   (DecItfc $ [suffixIden suf iden]) : expandPort suf ps
 
+for :: (a -> Result [b]) -> [a] -> Result [b]
+for _ [] = Right []
+for f (c:cs) = (++) <$> f c <*> for f cs
+
 -- Module内の識別子にサフィックスをつける
 expandModuleElements :: [SourceElement] -> [ModuleName] -> [ModuleElement] -> Suffix -> Result [ModuleElement]
 expandModuleElements _ _ [] _ = Right []
 expandModuleElements srcElems mns (m:ms) suf = (++) <$> m' <*> ( expandModuleElements srcElems mns ms suf ) where
    m' = case m of
-      DecMod  (c,m)  -> searchMod (snd $ divideSrc srcElems) (getToken m) >>= expandSubModules ("@" ++ (getToken c) ++ suf) mns srcElems
+      DecMod  (cs,m)  -> for (\x -> do
+        defMod <- searchMod (snd $ divideSrc srcElems) (getToken m)
+        expandSubModules ("@" ++ (getToken x) ++ suf) mns srcElems defMod) cs
       DecPart (c,p,t)-> Right [DecPart (map (suffixIden suf) c,p,t)]
       DecWire w      -> Right [DecWire $ map (suffixIden suf) w]
       DecItfc i      -> Right [DecItfc $ map( suffixIden suf) i]

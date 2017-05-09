@@ -2,6 +2,7 @@ module Common where
 
 import Data.Tuple
 import Data.List
+import Control.Applicative
 
 lookupWith :: (a->Bool) -> [a] -> Maybe a
 lookupWith _ [] = Nothing

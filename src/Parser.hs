@@ -35,7 +35,7 @@ type CompName = String
 type DefinePart = (PartIden, ([(PortIntLit,PortIden)], Reference))
 type DefineModule = (ModuleIden, ([(PortIntLit,PortIden)], [ModuleElement]))
 type DeclarePart = ([CompIden], PartIden, Maybe PartType)
-type DeclareModule = (CompIden, ModuleIden)
+type DeclareModule = ([CompIden], ModuleIden)
 type ConnectExpression = (Cnct, [BCnct], Cnct)
 
 data SourceElement = Import ImpFile
@@ -198,7 +198,7 @@ decItfc = do
 decModule :: Parser ModuleElement
 decModule = do
   stringSp kwdDecMod
-  c <- iden
+  c <- sepBy1 iden $ char ','
   stringSp kwdAs
   m <- iden
   charSp ';'
