@@ -44,7 +44,7 @@ data SourceElement = Import ImpFile
 
 data ModuleElement = DecMod DeclareModule
                    | DecPart DeclarePart
-                   | DecWire WireIden
+                   | DecWire [WireIden]
                    | DecItfc ItfcIden
                    | ConExpr ConnectExpression deriving Show
 
@@ -184,7 +184,7 @@ decPart = do
 decWire :: Parser ModuleElement
 decWire = do
   stringSp kwdDecWire
-  w <- iden
+  w <- sepBy1 iden $ char ','
   charSp ';'
   return $ DecWire w
 

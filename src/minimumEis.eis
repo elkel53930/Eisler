@@ -4,5 +4,7 @@ defmodule main()
 {
   part r1,r2 "10K 5% 1608" as R;
 
-  r1._1 - _2.r2;
+  wire VCC,GND;
+
+  VCC - _2.r1._1 - _2.r2._1 - GND;
 }

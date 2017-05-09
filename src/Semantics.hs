@@ -51,7 +51,7 @@ getIdensMod [] = []
 getIdensMod (t:ts) =
   case t of
     DecPart (cname, _, _) -> cname ++ (getIdensMod ts)
-    DecWire (wname   ) -> wname : (getIdensMod ts)
+    DecWire (wname   ) -> wname ++ (getIdensMod ts)
     DecMod  (mname, _) -> mname : (getIdensMod ts)
     DecItfc (iname   ) -> iname : (getIdensMod ts)
     ConExpr _ -> getIdensMod ts
@@ -80,7 +80,7 @@ expandModuleElements srcElems mns (m:ms) suf = (++) <$> m' <*> ( expandModuleEle
    m' = case m of
       DecMod  (c,m)  -> searchMod (snd $ divideSrc srcElems) (getToken m) >>= expandSubModules ("@" ++ (getToken c) ++ suf) mns srcElems
       DecPart (c,p,t)-> Right [DecPart (map (suffixIden suf) c,p,t)]
-      DecWire w      -> Right [DecWire $ suffixIden suf w]
+      DecWire w      -> Right [DecWire $ map (suffixIden suf) w]
       DecItfc i      -> Right [DecItfc $ suffixIden suf i]
       ConExpr (cr,bs,cl) ->
         Right [ConExpr (suffixCnct cr suf, suffixBCnct bs suf, suffixCnct cl suf)]
@@ -119,8 +119,8 @@ pickupConExpr modElems = map(\(ConExpr ce) -> ce) $ filter (\x -> case x of
   otherwise -> False) modElems
 
 pickupDecWire :: [ModuleElement] -> [WireIden]
-pickupDecWire modElems = map(\(DecWire w) -> w) $ filter (\x -> case x of
-  DecWire w -> True
+pickupDecWire modElems = concat . map(\(DecWire w) -> w) $ filter (\x -> case x of
+  DecWire _ -> True
   otherwise -> False) modElems
 
 pickupDecItfc :: [ModuleElement] -> [ItfcIden]
