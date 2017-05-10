@@ -1,4 +1,0 @@
-defpart LED(1:A 2:K) {ref "LD";}
-defpart DIODE(1:A 2:K) {ref "D";}
-defpart NchFET(1:G 2:S 3:D) {ref "Q";}
-defpart PchFET(1:G 2:S 3:D) {ref "Q";}
