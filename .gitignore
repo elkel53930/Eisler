@@ -5,4 +5,7 @@
 *.net
 *.csv
 src/Eisler
-src/experiment.hs
+src/*.net
+src/*.eis
+src/*.csv
+src/*.asc

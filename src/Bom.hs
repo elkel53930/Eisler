@@ -7,7 +7,7 @@ import Data.List
 
 bomShow :: [Net] -> String
 bomShow =
-  (++) "No.,Ref.,Type\n"
+  (++) "No.,Ref.,Type,Qty.\n"
   . concat
   . zipWith (++) index
   . sort
@@ -26,8 +26,8 @@ groupBom = groupBy (\(pt1,_) (pt2,_) -> pt1 == pt2)
 
 showBom :: [(Maybe PartType, Reference)] -> String
 showBom all@((pt,_):xs) = (concat $ map (flip(++) " " . snd) all) ++ case pt of
-  Nothing -> ",\n"
-  Just t  -> "," ++ (getToken t) ++ "\n"
+  Nothing -> concat [",,", (show $ length all), "\n"]
+  Just t  -> concat [",", (getToken t), ",", show $ length all, "\n"]
 
 index :: [String]
 index = map (flip(++) ".," . show) [1..]

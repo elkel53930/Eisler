@@ -7,11 +7,7 @@ import Data.List
 import qualified Data.Time as Time
 import qualified Data.Set as Set
 
-header _ = "!Eisler 0.1!\n*REMARK* "
-        ++ "untitled"
-        ++ " -- \n"
-        ++ "*REMARK*\n"
-
+header _ = "!Eisler 0.1!\n*REMARK* untitled -- \n*REMARK*\n"
 footer _ = "*END*     OF ASCII OUTPUT FILE"
 
 output :: [Net] -> String
@@ -30,27 +26,26 @@ parts = ("*PART*\n"++)
 
 
 part :: (Reference, CompName, PartName) -> String
-part (r,c,p) = r ++ "    " ++ c ++ "@" ++ p ++ "\n"
+part (r,c,p) = concat [r, "    ", c, "@", p, "\n"]
 
 signals :: [Net] -> String
 signals = ("*NET*\n"++) . concatMap signal
 
 signal :: Net -> String
-signal net = "*SIGNAL* "
-          ++ getToken w
-          ++ "\n"
-          ++ ( concatMap (\xs -> concat xs ++ "\n")
-             . split 5
-             $ map Pads.port ns )
+signal net =
+  concat [ "*SIGNAL* "
+         , getToken w
+         , "\n"
+         , ( concatMap (\xs -> concat xs ++ "\n")
+           . split 5
+           $ map Pads.port ns )]
   where
     ns = Set.toList set
     (w,set) = getNet net
 
 port :: Connectable -> String
-port (ConPort _ n r _ _) = r
-                        ++ "."
-                        ++ (show $ getToken n)
-                        ++ " "
+port (ConPort _ n r _ _) =
+  concat [r, ".", show $ getToken n, " "]
 port _ = ""
 
 
