@@ -49,3 +49,10 @@ format :: Int -> Int -> String
 format n digit = (replicate (digit - len) '0') ++ num where
   len = length num
   num = show n
+
+split :: Int -> [a] -> [[a]]
+split _ [] = []
+split n xs = (take n xs) : (split n $ drop n xs)
+
+replace :: Eq a => a -> a -> [a] -> [a]
+replace x y = map (\a -> if a==x then y else a)

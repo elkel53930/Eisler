@@ -1,6 +1,7 @@
 import qualified Parser as P
 import qualified Semantics as S
 import qualified Kicad as Kicad
+import qualified Pads as Pads
 import qualified Bom as Bom
 --import qualified Output as O
 import Common
@@ -30,6 +31,7 @@ translate args = do
       of
         Right nets -> do
           writeFile (changeExt "net" eisFile) $ Kicad.output ( S.namingWire nets 1 )
+          writeFile (changeExt "asc" eisFile) $ Pads.output ( S.namingWire nets 1 )
           writeFile (changeExt "csv" eisFile) $ Bom.bomShow nets
         Left l      -> putStrLn l
     Left err -> putStrLn $ show err

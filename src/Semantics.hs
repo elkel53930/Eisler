@@ -20,7 +20,7 @@ moduleNet :: [SourceElement] -> ModuleName -> Result [(Connectable,Connectable)]
 moduleNet parsed name = do
   srcElems <- checkOverlap parsed name
   (_,(_,modElems)) <- searchMod (snd $ divideSrc srcElems) name
-  modElems' <- expandModuleElements srcElems [name] modElems ( '@' : name )
+  modElems' <- expandModuleElements srcElems [name] modElems ( '-' : name )
 --  Left $ show modElems'
   convertToPort modElems' (fst $ divideSrc srcElems) $ expansionCnct . pickupConExpr $ modElems'
 
@@ -84,7 +84,7 @@ expandModuleElements srcElems mns (m:ms) suf = (++) <$> m' <*> ( expandModuleEle
    m' = case m of
       DecMod  (cs,m)  -> for (\x -> do
         defMod <- searchMod (snd $ divideSrc srcElems) (getToken m)
-        expandSubModules ("@" ++ (getToken x) ++ suf) mns srcElems defMod) cs
+        expandSubModules ("-" ++ (getToken x) ++ suf) mns srcElems defMod) cs
       DecPart (c,p,t)-> Right [DecPart (map (suffixIden suf) c,p,t)]
       DecWire w      -> Right [DecWire $ map (suffixIden suf) w]
       DecItfc i      -> Right [DecItfc $ map( suffixIden suf) i]
@@ -217,9 +217,9 @@ searchWire wire modElems =
 cnctToConnectable :: [ModuleElement] -> [DefinePart] -> Cnct -> Result Connectable
 cnctToConnectable modElems defParts (Pin compIden portIden) = do
   case searchComp compIden $ pickupDecPart modElems of
-    Left msg -> case searchItfc (suffixIden ('@' : getToken compIden) portIden) modElems of
+    Left msg -> case searchItfc (suffixIden ('-' : getToken compIden) portIden) modElems of
       Nothing -> Left msg
-      Just i  -> Right $ ConItfc (suffixIden ('@' : getToken compIden) portIden)
+      Just i  -> Right $ ConItfc (suffixIden ('-' : getToken compIden) portIden)
     Right p -> do
       (partIden, partType) <- searchComp compIden $ pickupDecPart modElems
       partInfo <- searchPart partIden defParts
