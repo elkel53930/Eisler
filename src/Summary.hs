@@ -51,7 +51,9 @@ showPart (r,c,pt) = concat
 netsInformation :: [Net] -> String
 netsInformation =
   (++) "## Nets information\n\n|Net name|Pins|\n|--|--|\n"
-  . concatMap showNet
+  . concat
+  . sort
+  . map showNet
 
 showNet :: Net -> String
 showNet net = concat
@@ -65,18 +67,21 @@ showConnectables :: Set.Set Connectable -> String
 showConnectables =
   concat
   . intersperse "<br>"
+  . filter (/="")
+  . sort
   . map showConnectable
   . Set.elems
 
 showConnectable :: Connectable -> String
 showConnectable (ConPort c _ po _ _ _) = concat
-  [ "Port : "
-  , atmark $ getToken c
+  [ atmark $ getToken c
   , " . "
   , getToken po
   ]
+showConnectable _ = ""
+{-
 showConnectable (ConWire w) =  "Wire : " ++ (atmark $ getToken w)
 showConnectable (ConItfc i) =  "Interface : " ++ (atmark $ getToken i)
-
+-}
 atmark :: String -> String
 atmark = replace '-' '@'

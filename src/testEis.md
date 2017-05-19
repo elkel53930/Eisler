@@ -1,6 +1,6 @@
 # [testEis.eis] Translation Summary
 
-2017-05-19 14:54:12.2573951 “Œ‹ (•W€)
+2017-05-19 16:46:05.2111418 “Œ‹ (•W€)
 
 ## Parts information
 
@@ -17,9 +17,9 @@
 
 |Net name|Pins|
 |--|--|
-|$$$00001|Interface : A@l0@main<br>Port : l0@l0@main . A<br>Port : r0@main . _2|
-|$$$00002|Port : l0@l0@main . K<br>Port : l1@l0@main . A|
-|GND-main|Interface : K@l0@main<br>Interface : K@l1@main<br>Port : cn@main . GND<br>Port : l1@l0@main . K<br>Port : l1@l1@main . K|
-|$$$00003|Interface : A@l1@main<br>Port : l0@l1@main . A<br>Port : r1@main . _2|
-|$$$00004|Port : l0@l1@main . K<br>Port : l1@l1@main . A|
-|VCC-main|Port : cn@main . VCC<br>Port : r0@main . _1<br>Port : r1@main . _1|
+|$$$00001|l0@l0@main . A<br>r0@main . _2|
+|$$$00002|l0@l0@main . K<br>l1@l0@main . A|
+|$$$00003|l0@l1@main . A<br>r1@main . _2|
+|$$$00004|l0@l1@main . K<br>l1@l1@main . A|
+|GND-main|cn@main . GND<br>l1@l0@main . K<br>l1@l1@main . K|
+|VCC-main|cn@main . VCC<br>r0@main . _1<br>r1@main . _1|
