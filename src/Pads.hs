@@ -18,7 +18,7 @@ parts = ("*PART*\n"++)
       . concatMap part
       . nub
       . sort
-      . map (\(ConPort c _ r p _) -> (r,getToken c,getToken p))
+      . map (\(ConPort c _ _ r p _) -> (r,getToken c,getToken p))
       . filter isConPort
       . Set.elems
       . foldl Set.union Set.empty
@@ -44,12 +44,12 @@ signal net =
     (w,set) = getNet net
 
 port :: Connectable -> String
-port (ConPort _ n r _ _) =
+port (ConPort _ n _ r _ _) =
   concat [r, ".", show $ getToken n, " "]
 port _ = ""
 
 
 isConPort :: Connectable -> Bool
 isConPort x = case x of
-  ConPort _ _ _ _ _ -> True
+  ConPort _ _ _ _ _ _ -> True
   otherwise -> False

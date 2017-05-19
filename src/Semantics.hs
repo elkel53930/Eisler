@@ -11,7 +11,7 @@ import Common
 newtype Net = Net { getNet :: (WireIden, Set.Set Connectable)} deriving (Show,Eq)
 data Connectable = ConWire WireIden
                  | ConItfc ItfcIden
-                 | ConPort CompIden PortIntLit Reference PartIden (Maybe PartType) deriving (Show,Eq,Ord)
+                 | ConPort CompIden PortIntLit PortIden Reference PartIden (Maybe PartType) deriving (Show,Eq,Ord)
 type ErrorMsg = String
 type Result = Either ErrorMsg
 type Suffix = String
@@ -25,7 +25,7 @@ moduleNet parsed name = do
   convertToPort modElems' (fst $ divideSrc srcElems) $ expansionCnct . pickupConExpr $ modElems'
 
 getRef :: Connectable -> Reference
-getRef (ConPort _ _ ref _ _) = ref
+getRef (ConPort _ _ _ ref _ _) = ref
 
 checkOverlap :: [SourceElement] -> ModuleName -> Result [SourceElement]
 checkOverlap srcElems mname = do
@@ -224,7 +224,7 @@ cnctToConnectable modElems defParts (Pin compIden portIden) = do
       (partIden, partType) <- searchComp compIden $ pickupDecPart modElems
       partInfo <- searchPart partIden defParts
       portIntLit <- searchPort portIden (fst partInfo)
-      Right (ConPort compIden portIntLit (snd partInfo) partIden partType)
+      Right (ConPort compIden portIntLit portIden (snd partInfo) partIden partType)
 cnctToConnectable modElems _ (Wire wireIden) = do
   -- DecWireとDecItfcの中から該当するものがあるかどうか探す
   case searchWire wireIden modElems of
@@ -236,14 +236,14 @@ cnctToConnectable modElems _ (Wire wireIden) = do
 -- Port > Wire > Itfc
 -- リファレンスプリフィックスでOrdering
 ordRef :: Connectable -> Connectable -> Ordering
-ordRef x@(ConPort _ _ _ _ _) y@(ConPort _ _ _ _ _) = compare (getRef x) (getRef y)
-ordRef (ConPort _ _ _ _ _) (ConWire _) = GT
-ordRef (ConWire _) (ConPort _ _ _ _ _) = LT
+ordRef x@(ConPort _ _ _ _ _ _) y@(ConPort _ _ _ _ _ _) = compare (getRef x) (getRef y)
+ordRef (ConPort _ _ _ _ _ _) (ConWire _) = GT
+ordRef (ConWire _) (ConPort _ _ _ _ _ _) = LT
 ordRef (ConWire x) (ConWire y) = compare x y
 ordRef (ConItfc _) (ConWire _) = LT
 ordRef (ConWire _) (ConItfc _) = GT
-ordRef (ConItfc _) (ConPort _ _ _ _ _) = LT
-ordRef (ConPort _ _ _ _ _) (ConItfc _) = GT
+ordRef (ConItfc _) (ConPort _ _ _ _ _ _) = LT
+ordRef (ConPort _ _ _ _ _ _) (ConItfc _) = GT
 ordRef (ConItfc x) (ConItfc y) = compare x y
 
 -- リファレンスプリフィックスが等しいか
@@ -252,14 +252,14 @@ eqRef pl pr = (==EQ) $ ordRef pl pr
 
 -- コンポーネントが等しいか
 eqComp :: Connectable -> Connectable -> Bool
-eqComp (ConPort x _ _ _ _) (ConPort y _ _ _ _) = x == y
-eqComp (ConPort _ _ _ _ _) (ConWire _) = False
-eqComp (ConWire _) (ConPort _ _ _ _ _) = False
+eqComp (ConPort x _ _ _ _ _) (ConPort y _ _ _ _ _) = x == y
+eqComp (ConPort _ _ _ _ _ _) (ConWire _) = False
+eqComp (ConWire _) (ConPort _ _ _ _ _ _) = False
 eqComp (ConWire x) (ConWire y) = x == y
 eqComp (ConItfc _) (ConWire _) = False
 eqComp (ConWire _) (ConItfc _) = False
-eqComp (ConItfc _) (ConPort _ _ _ _ _) = False
-eqComp (ConPort _ _ _ _ _) (ConItfc _) = False
+eqComp (ConItfc _) (ConPort _ _ _ _ _ _) = False
+eqComp (ConPort _ _ _ _ _ _) (ConItfc _) = False
 eqComp (ConItfc x) (ConItfc y) = x == y
 
 
@@ -278,7 +278,7 @@ termRef (ps:pss) = termRef_ ps 1 ++ (termRef pss)
 
 termRef_ :: [Connectable] -> Int -> [(CompIden,Reference)]
 termRef_ [] _ = []
-termRef_ ((ConPort c _ r _ _):ps) n = (c,r ++ (show n)) : (termRef_ ps $ n + 1)
+termRef_ ((ConPort c _ _ r _ _):ps) n = (c,r ++ (show n)) : (termRef_ ps $ n + 1)
 termRef_ (_:ps) n = termRef_ ps n
 
 expandTuple :: [(a,a)] -> [a]
@@ -290,9 +290,9 @@ renameRef dic (p1,p2) = (renameRefSingle dic p1, renameRefSingle dic p2)
 
 renameRefSingle :: [(CompIden,Reference)] -> Connectable -> Connectable
 renameRefSingle [] port = port
-renameRefSingle ((c,r):ts) port@(ConPort pc pp pr ppa pt) =
+renameRefSingle ((c,r):ts) port@(ConPort pc pp po pr ppa pt) =
   if pc == c
-    then ConPort pc pp r ppa pt
+    then ConPort pc pp po r ppa pt
     else renameRefSingle ts port
 renameRefSingle _ x = id x  -- Wire and Itfc
 
@@ -321,8 +321,8 @@ searchConnectable i@(ConItfc _) (s:ss) =
   if Set.member i (snd $ getNet s)
     then s
     else searchConnectable i ss
-searchConnectable p@(ConPort _ _ _ _ _) [] = Net (newToken "", Set.singleton p)
-searchConnectable p@(ConPort _ _ _ _ _) (s:ss) =
+searchConnectable p@(ConPort _ _ _ _ _ _) [] = Net (newToken "", Set.singleton p)
+searchConnectable p@(ConPort _ _ _ _ _ _) (s:ss) =
   if Set.member p (snd $ getNet s)
     then s
     else searchConnectable p ss

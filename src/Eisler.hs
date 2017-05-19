@@ -3,6 +3,7 @@ import qualified Semantics as S
 import qualified Kicad as Kicad
 import qualified Pads as Pads
 import qualified Bom as Bom
+import qualified Summary as Summary
 --import qualified Output as O
 import Common
 import Text.ParserCombinators.Parsec
@@ -32,13 +33,9 @@ translate args = do
         Right nets -> do
           writeFile (changeExt "net" eisFile) $ Kicad.output ( S.namingWire nets 1 )
           writeFile (changeExt "asc" eisFile) $ Pads.output ( S.namingWire nets 1 )
-          writeFile (changeExt "csv" eisFile) $ Bom.bomShow nets
+          writeFile (changeExt "csv" eisFile) $ Bom.bomShow ( S.namingWire nets 1 )
+          Summary.output eisFile ( S.namingWire nets 1 )
         Left l      -> putStrLn l
     Left err -> putStrLn $ show err
   where
     eisFile = head args
-
-changeExt :: String -> FilePath -> FilePath
-changeExt newExt file = (reverse $ drop len rfile) ++ newExt where
-  len = length $ takeWhile (/='.') rfile
-  rfile = reverse file

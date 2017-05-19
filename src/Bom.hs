@@ -15,7 +15,7 @@ bomShow =
   . groupBom
   . nub
   . sort
-  . map (\(ConPort _ _ ref _ pt) -> (pt,ref))
+  . map (\(ConPort _ _ _ ref _ pt) -> (pt,ref))
   . filter isConPort
   . Set.elems
   . foldl Set.union Set.empty
@@ -34,5 +34,5 @@ index = map (flip(++) ".," . show) [1..]
 
 isConPort :: Connectable -> Bool
 isConPort x = case x of
-  ConPort _ _ _ _ _ -> True
+  ConPort _ _ _ _ _ _ -> True
   otherwise -> False

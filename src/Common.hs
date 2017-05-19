@@ -56,3 +56,9 @@ split n xs = (take n xs) : (split n $ drop n xs)
 
 replace :: Eq a => a -> a -> [a] -> [a]
 replace x y = map (\a -> if a==x then y else a)
+
+
+changeExt :: String -> FilePath -> FilePath
+changeExt newExt file = (reverse $ drop len rfile) ++ newExt where
+  len = length $ takeWhile (/='.') rfile
+  rfile = reverse file
