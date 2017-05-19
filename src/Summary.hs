@@ -57,7 +57,7 @@ netsInformation =
 
 showNet :: Net -> String
 showNet net = concat
-  [ "|", getToken wire
+  [ "|", atmark $ getToken wire
   , "|", showConnectables set
   , "|\n"
   ] where
