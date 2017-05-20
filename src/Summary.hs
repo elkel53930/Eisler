@@ -15,7 +15,10 @@ type Markdown = String
 output :: FilePath -> [Net] -> IO()
 output fp net = do
   time <- getZonedTime
-  let timeInfo = show time
+  let timeInfo = concat [ show $ zonedTimeToLocalTime time
+                        , " "
+                        , show . minutesToTimeZone . timeZoneMinutes $ zonedTimeZone time
+                        ]
   writeFile (changeExt "md" fp) $ concat
     [ "# ["
     , fp
