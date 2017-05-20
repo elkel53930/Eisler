@@ -51,7 +51,11 @@ bom =
 
 showBom :: [(Maybe PartType, Reference)] -> String
 showBom all@((pt,_):xs) = concat
-  [ "|", concat . intersperse " " $ map snd all -- References
+  [ "|", concat
+       . map (concat . intersperse " ")
+       . intersperse ["<br>"]
+       . split 10
+       $ map snd all -- References
   , "|", mb $ getToken <$> pt                   -- Part Type
   , "|", show $ length all                      -- Qty.
   , "|", mb $ rsSearch <$> pt                   -- RS
