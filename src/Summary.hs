@@ -35,7 +35,7 @@ output fp net = do
 
 bom :: [Net] -> Markdown
 bom =
-  (++) "## BOM\n\n|Ref.|Type|Qty|Search|\n|--|--|--|--|--|\n"
+  (++) "## BOM\n\n|Ref.|Type|Qty|Search|\n|--|--|--:|--|\n"
   . concatMap showBom
   . groupBy (\(pt1,_) (pt2,_) -> pt1 == pt2)
   . nub
