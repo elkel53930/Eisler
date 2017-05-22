@@ -42,7 +42,7 @@ bom =
   . concatMap showBom
   . groupBy (\(pt1,_) (pt2,_) -> pt1 == pt2)
   . nub
-  . sort
+  . sortBy (\x y -> compare (snd x) (snd y))
   . map (\(ConPort _ _ _ ref _ pt) -> (pt,ref))
   . filter isConPort
   . Set.elems
