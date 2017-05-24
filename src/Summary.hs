@@ -1,5 +1,8 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Summary where
 
+import Development.GitRev
 import Parser
 import Semantics
 import Common
@@ -22,13 +25,19 @@ output fp net = do
   writeFile (changeExt "md" fp) $ concat
     [ "# ["
     , fp
-    , "] Translation Summary\n\n"
+    , "] Translation Summary\n\n* Time-stamp : "
     , timeInfo
+    , "\n*  "
+    , gitinfo
     , "\n\n"
     , bom net
     , partsInformation net
     , netsInformation net
     ]
+
+gitinfo :: String
+gitinfo = concat [ "Git revision : ", $(gitBranch), "@", $(gitHash)
+       , " (", $(gitCommitDate), ")\n" ]
 
 {-
   BOMを出力
