@@ -1,5 +1,7 @@
 import qualified Parser as P
-import qualified Semantics as S
+import qualified Combine as C
+import qualified Organize as O
+import qualified Referencing as R
 import qualified Kicad as Kicad
 import qualified Pads as Pads
 import qualified Bom as Bom
@@ -22,19 +24,19 @@ main = do
 
 translate args = do
   -- IO
-  result <- P.parseEisFile $ eisFile
+  result <- P.parseEis $ eisFile
   case result of
     Right parsed -> case do
       -- Result = Either ErrorMsg
-      ports <- S.moduleNet parsed "main"
-      nets <- S.combineConnectables [] $ S.referencing ports
+      ports <- O.organize parsed "main"
+      nets <- C.combine [] $ R.referencing ports
       return nets
       of
         Right nets -> do
-          writeFile (changeExt "net" eisFile) $ Kicad.output ( S.namingWire nets 1 )
-          writeFile (changeExt "asc" eisFile) $ Pads.output ( S.namingWire nets 1 )
-          writeFile (changeExt "csv" eisFile) $ Bom.bomShow ( S.namingWire nets 1 )
-          Summary.output eisFile ( S.namingWire nets 1 )
+          writeFile (changeExt "net" eisFile) $ Kicad.output nets
+          writeFile (changeExt "asc" eisFile) $ Pads.output nets
+          writeFile (changeExt "csv" eisFile) $ Bom.output nets
+          Summary.output eisFile nets
         Left l      -> putStrLn l
     Left err -> putStrLn $ show err
   where

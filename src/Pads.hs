@@ -1,8 +1,7 @@
-module Pads where
+module Pads(output) where
 
+import Types
 import Common
-import Parser
-import Semantics
 import Data.List
 import qualified Data.Time as Time
 import qualified Data.Set as Set

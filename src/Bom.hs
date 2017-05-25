@@ -1,12 +1,11 @@
-module Bom where
+module Bom(output) where
 
-import Parser
-import Semantics
+import Types
 import qualified Data.Set as Set
 import Data.List
 
-bomShow :: [Net] -> String
-bomShow =
+output :: [Net] -> String
+output =
   (++) "No.,Ref.,Type,Qty.\n"
   . concat
   . zipWith (++) index

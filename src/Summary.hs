@@ -1,10 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Summary where
+module Summary(output) where
 
 import Development.GitRev
-import Parser
-import Semantics
+import Types
 import Common
 import qualified Data.Set as Set
 import Data.List

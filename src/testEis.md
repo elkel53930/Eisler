@@ -1,7 +1,7 @@
 # [testEis.eis] Translation Summary
 
-* Time-stamp : 2017-05-24 22:55:53.3491176 +0900
-*  Git revision : master@dbf454ec43ceaa7fdb1f3cf545cf830db5620bcd (Mon May 22 10:32:25 2017 +0900)
+* Time-stamp : 2017-05-25 21:45:02.636443 +0900
+*  Git revision : master@e03cce9384e3157ed6d1f782895768773242cb4b (Wed May 24 22:56:29 2017 +0900)
 
 
 ## BOM

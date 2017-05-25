@@ -1,8 +1,7 @@
-module Kicad where
+module Kicad(output) where
 
-import Parser
+import Types
 import Common
-import Semantics
 import Data.Set
 import qualified Data.List as L
 
