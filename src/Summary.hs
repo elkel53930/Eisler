@@ -42,15 +42,15 @@ gitinfo = concat [ "Git revision : ", $(gitBranch), "@", $(gitHash)
   BOMを出力
   リファレンス、型番、数量、Digikeyで検索、RSで検索、Chip1Stopで検索
 -}
-
-
 bom :: [Net] -> Markdown
 bom =
   (++) "## BOM\n\n|Ref.|Type|Qty|Search|\n|--|--|--:|--|\n"
-  . concatMap showBom
+  . concat
+  . sort
+  . map showBom
   . groupBy (\(pt1,_) (pt2,_) -> pt1 == pt2)
   . nub
-  . sortBy (\x y -> compare (snd x) (snd y))
+  . sortBy (\x y -> compare (fst x) (fst y))
   . map (\(ConPort _ _ _ ref _ pt) -> (pt,ref))
   . filter isConPort
   . Set.elems
@@ -63,6 +63,7 @@ showBom all@((pt,_):xs) = concat
        . map (concat . intersperse " ")
        . intersperse ["<br>"]
        . split 10
+       . sort
        $ map snd all -- References
   , "|", mb $ getToken <$> pt                   -- Part Type
   , "|", show $ length all                      -- Qty.
