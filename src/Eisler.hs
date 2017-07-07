@@ -36,7 +36,7 @@ translate args = do
           writeFile (changeExt "net" eisFile) $ Kicad.output nets
           writeFile (changeExt "asc" eisFile) $ Pads.output nets
           writeFile (changeExt "csv" eisFile) $ Bom.output nets
-          Summary.output eisFile nets
+          Summary.output "README.md" nets
         Left l      -> putStrLn l
     Left err -> putStrLn $ show err
   where
