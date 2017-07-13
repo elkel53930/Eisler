@@ -14,8 +14,8 @@ import Network.HTTP.Base (urlEncode)
 
 type Markdown = String
 
-output :: FilePath -> [Net] -> IO()
-output fp net = do
+output :: FilePath -> FilePath -> [Net] -> IO()
+output eis fp net = do
   time <- getZonedTime
   let timeInfo = concat [ show $ zonedTimeToLocalTime time
                         , " "
@@ -23,7 +23,7 @@ output fp net = do
                         ]
   writeFile (changeExt "md" fp) $ concat
     [ "# ["
-    , fp
+    , eis
     , "] Translation Summary\n\n* Time-stamp : "
     , timeInfo
     , "\n*  "
