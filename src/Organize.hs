@@ -31,6 +31,7 @@ getIdens (t:ts) tagMod = name ++ getIdens ts tagMod where
         if mname .== tagMod
           then (mname) : getIdensMod m
           else []
+      Import _ -> []
 
 -- [ModuleElement]内の識別子の一覧を返す
 getIdensMod :: [ModuleElement] -> [Token String]
@@ -100,6 +101,7 @@ divideSrc ((DefPart p):ts) = (p:ps,ms) where
   (ps,ms) = divideSrc ts
 divideSrc ((DefMod m):ts) = (ps,m:ms) where
   (ps,ms) = divideSrc ts
+divideSrc ((Import _):ts) = divideSrc ts
 
 pickupDecPart :: [ModuleElement] -> [DeclarePart]
 pickupDecPart modElems = map(\(DecPart p) -> p) $ filter (\x -> case x of

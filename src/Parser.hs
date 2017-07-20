@@ -16,8 +16,12 @@ kwdDecWire = "wire"
 kwdDecItfc = "interface"
 
 parseEis :: FilePath -> IO(Either ParseError [SourceElement])
-parseEis filepath = parseEisFiles [newToken filepath] []
-
+--parseEis filepath = parseEisFiles [newToken filepath] []
+parseEis file = do
+  handle <- openFile file ReadMode
+  source <- hGetContents handle
+  return $ parse eislerFile file source
+{-
 parseEisFiles :: [ImpFile] -> [SourceElement] -> IO(Either ParseError [SourceElement])
 parseEisFiles [] srcElems = return $ Right srcElems
 parseEisFiles (f:fs) srcElems = do
@@ -34,7 +38,7 @@ parseEisFiles (f:fs) srcElems = do
         elements = pickupNotImport (parsed++srcElems)
     Left err -> return $ Left err
   where file = getToken f
-
+-}
 
 pickupImport :: [SourceElement] -> [ImpFile]
 pickupImport srcElems =

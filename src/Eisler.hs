@@ -1,3 +1,4 @@
+import Types
 import qualified Parser as P
 import qualified Combine as C
 import qualified Organize as O
@@ -12,6 +13,7 @@ import Text.ParserCombinators.Parsec
 import System.Environment
 import System.IO
 import System.Directory
+import System.FilePath
 import Data.List
 import qualified Data.Set as Set
 import Control.Exception
@@ -22,9 +24,20 @@ main = do
     0 -> putStrLn "Eisler translator to KiCad legacy netlist."
     otherwise -> translate args
 
+concatResult :: [Either ParseError [SourceElement]] -> Either ParseError [SourceElement]
+concatResult [] = Right []
+concatResult (Right elements:ss) =
+  case concatResult ss of
+    Left err -> Left err
+    Right r -> Right $ elements ++ r
+concatResult (Left err:ss) = Left err
+
 translate args = do
   -- IO
-  result <- P.parseEis $ eisFile
+  dirFiles <- getDirectoryContents $ takeDirectory eisFile
+  let eisFiles = extensionFilter "eis" dirFiles
+  result <- concatResult <$> mapM P.parseEis eisFiles
+--  result <- P.parseEis $ eisFile
   case result of
     Right parsed -> case do
       -- Result = Either ErrorMsg
@@ -41,3 +54,9 @@ translate args = do
     Left err -> putStrLn $ show err
   where
     eisFile = head args
+
+getExtension :: String -> String
+getExtension = reverse . takeWhile (/='.') . reverse
+
+extensionFilter :: String -> [FilePath] -> [FilePath]
+extensionFilter ext = filter ((==ext) . getExtension)
