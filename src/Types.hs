@@ -40,12 +40,13 @@ type ConnectExpression = (Cnct, [BCnct], Cnct)
 
 data SourceElement = Import ImpFile
                    | DefPart DefinePart
-                   | DefMod DefineModule deriving Show
+                   | DefMod DefineModule
+                   | DecGPart DeclarePart deriving Show
 
-data ModuleElement = DecMod DeclareModule
-                   | DecPart DeclarePart
-                   | DecWire [WireIden]
-                   | DecItfc [ItfcIden]
+data ModuleElement = DecLMod DeclareModule
+                   | DecLPart DeclarePart
+                   | DecLWire [WireIden]
+                   | DecLItfc [ItfcIden]
                    | ConExpr ConnectExpression deriving Show
 
 newtype Net = Net { getNet :: (WireIden, Set.Set Connectable)} deriving (Show,Eq)

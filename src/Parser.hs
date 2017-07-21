@@ -8,12 +8,12 @@ import Text.Parsec.Char
 
 kwdDefModule = "defmodule"
 kwdDefPart = "defpart"
-kwdDecPart = "part"
-kwdDecMod = "module"
+kwdDecLPart = "part"
+kwdDecLMod = "module"
 kwdAs = "as"
 kwdImport = "import"
-kwdDecWire = "wire"
-kwdDecItfc = "interface"
+kwdDecLWire = "wire"
+kwdDecLItfc = "interface"
 
 parseEis :: FilePath -> IO(Either ParseError [SourceElement])
 --parseEis filepath = parseEisFiles [newToken filepath] []
@@ -69,10 +69,10 @@ defModule = do
   ps <- many port
   charSp ')'
   charSp '{'
-  elems <- many ( try decWire <|>
-                  try decPart <|>
-                  try decItfc <|>
-                  try decModule <|>
+  elems <- many ( try decLWire <|>
+                  try decLPart <|>
+                  try decLItfc <|>
+                  try decLModule <|>
                   conExpr)
   charSp '}'
   return $ DefMod (m, (ps, elems))
@@ -113,38 +113,59 @@ port = do
   part/module/wire declare
 -}
 
-decPart :: Parser ModuleElement
+decPart :: Parser DeclarePart
 decPart = do
-  stringSp kwdDecPart
+  stringSp kwdDecLPart
   c <- sepBy1 iden $ char ','
   t <- optionMaybe strLit
   stringSp kwdAs
   p <- iden
   charSp ';'
-  return $ DecPart (c,p,t)
+  return (c,p,t)
 
-decWire :: Parser ModuleElement
+decLPart :: Parser ModuleElement
+decLPart = do
+  dp <- decPart
+  return $ DecLPart dp
+
+decWire :: Parser [WireIden]
 decWire = do
-  stringSp kwdDecWire
+  stringSp kwdDecLWire
   w <- sepBy1 iden $ char ','
   charSp ';'
-  return $ DecWire w
+  return w
 
-decItfc :: Parser ModuleElement
+decLWire :: Parser ModuleElement
+decLWire = do
+  w <- decWire
+  return $ DecLWire w
+
+
+decItfc :: Parser [ItfcIden]
 decItfc = do
-  stringSp kwdDecItfc
+  stringSp kwdDecLItfc
   i <- sepBy1 iden $ char ','
   charSp ';'
-  return $ DecItfc i
+  return i
 
-decModule :: Parser ModuleElement
+decLItfc :: Parser ModuleElement
+decLItfc = do
+  i <- decItfc
+  return $ DecLItfc i
+
+decModule :: Parser DeclareModule
 decModule = do
-  stringSp kwdDecMod
+  stringSp kwdDecLMod
   c <- sepBy1 iden $ char ','
   stringSp kwdAs
   m <- iden
   charSp ';'
-  return $ DecMod (c,m)
+  return (c,m)
+
+decLModule :: Parser ModuleElement
+decLModule = do
+  dm <- decModule
+  return $ DecLMod dm
 
 {-
   ConExpr

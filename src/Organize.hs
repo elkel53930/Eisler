@@ -38,10 +38,10 @@ getIdensMod :: [ModuleElement] -> [Token String]
 getIdensMod [] = []
 getIdensMod (t:ts) =
   case t of
-    DecPart (cname, _, _) -> cname ++ (getIdensMod ts)
-    DecWire (wname   ) -> wname ++ (getIdensMod ts)
-    DecMod  (mname, _) -> mname ++ (getIdensMod ts)
-    DecItfc (iname   ) -> iname ++ (getIdensMod ts)
+    DecLPart (cname, _, _) -> cname ++ (getIdensMod ts)
+    DecLWire (wname   ) -> wname ++ (getIdensMod ts)
+    DecLMod  (mname, _) -> mname ++ (getIdensMod ts)
+    DecLItfc (iname   ) -> iname ++ (getIdensMod ts)
     ConExpr _ -> getIdensMod ts
 
 getOverlapsError :: [Token String] -> String
@@ -59,7 +59,7 @@ expandSubModules suf mns srcElems (iden, (ports,modElems)) = do
 expandPort :: Suffix -> [(PortIntLit,PortIden)] -> [ModuleElement]
 expandPort _ [] = []
 expandPort suf ((num,iden):ps) =
-  (DecItfc $ [suffixIden suf iden]) : expandPort suf ps
+  (DecLItfc $ [suffixIden suf iden]) : expandPort suf ps
 
 for :: (a -> Result [b]) -> [a] -> Result [b]
 for _ [] = Right []
@@ -70,12 +70,12 @@ expandModuleElements :: [SourceElement] -> [ModuleName] -> [ModuleElement] -> Su
 expandModuleElements _ _ [] _ = Right []
 expandModuleElements srcElems mns (m:ms) suf = (++) <$> m' <*> ( expandModuleElements srcElems mns ms suf ) where
    m' = case m of
-      DecMod  (cs,m)  -> for (\x -> do
+      DecLMod  (cs,m)  -> for (\x -> do
         defMod <- searchMod (snd $ divideSrc srcElems) (getToken m)
         expandSubModules ("-" ++ (getToken x) ++ suf) mns srcElems defMod) cs
-      DecPart (c,p,t)-> Right [DecPart ( map (suffixIden suf) c,p,t )]
-      DecWire w      -> Right [DecWire $ map (suffixIden suf) w]
-      DecItfc i      -> Right [DecItfc $ map( suffixIden suf) i]
+      DecLPart (c,p,t)-> Right [DecLPart ( map (suffixIden suf) c,p,t )]
+      DecLWire w      -> Right [DecLWire $ map (suffixIden suf) w]
+      DecLItfc i      -> Right [DecLItfc $ map( suffixIden suf) i]
       ConExpr (cr,bs,cl) ->
         Right [ConExpr (suffixCnct cr suf, suffixBCnct bs suf, suffixCnct cl suf)]
 
@@ -103,9 +103,9 @@ divideSrc ((DefMod m):ts) = (ps,m:ms) where
   (ps,ms) = divideSrc ts
 divideSrc ((Import _):ts) = divideSrc ts
 
-pickupDecPart :: [ModuleElement] -> [DeclarePart]
-pickupDecPart modElems = map(\(DecPart p) -> p) $ filter (\x -> case x of
-  DecPart p -> True
+pickupDecLPart :: [ModuleElement] -> [DeclarePart]
+pickupDecLPart modElems = map(\(DecLPart p) -> p) $ filter (\x -> case x of
+  DecLPart p -> True
   otherwise -> False) modElems
 
 pickupConExpr :: [ModuleElement] -> [ConnectExpression]
@@ -113,14 +113,14 @@ pickupConExpr modElems = map(\(ConExpr ce) -> ce) $ filter (\x -> case x of
   ConExpr _ -> True
   otherwise -> False) modElems
 
-pickupDecWire :: [ModuleElement] -> [WireIden]
-pickupDecWire modElems = concatMap(\(DecWire w) -> w) $ filter (\x -> case x of
-  DecWire _ -> True
+pickupDecLWire :: [ModuleElement] -> [WireIden]
+pickupDecLWire modElems = concatMap(\(DecLWire w) -> w) $ filter (\x -> case x of
+  DecLWire _ -> True
   otherwise -> False) modElems
 
-pickupDecItfc :: [ModuleElement] -> [ItfcIden]
-pickupDecItfc modElems = concatMap(\(DecItfc i) -> i) $ filter (\x -> case x of
-  DecItfc _ -> True
+pickupDecLItfc :: [ModuleElement] -> [ItfcIden]
+pickupDecLItfc modElems = concatMap(\(DecLItfc i) -> i) $ filter (\x -> case x of
+  DecLItfc _ -> True
   otherwise -> False) modElems
 
 -- -- -- --  search -- -- -- --
@@ -183,17 +183,17 @@ searchPort port partInfos =
 
 searchItfc :: WireIden -> [ModuleElement] -> Maybe ItfcIden
 searchItfc wire modElems =
-  case elem wire decItfc of
+  case elem wire decLItfc of
     True  -> Just wire
     False -> Nothing
-  where decItfc = pickupDecItfc modElems
+  where decLItfc = pickupDecLItfc modElems
 
 searchWire :: WireIden -> [ModuleElement] -> Maybe WireIden
 searchWire wire modElems =
   case elem wire decWire of
     True  -> Just wire
     False -> Nothing
-  where decWire = pickupDecWire modElems
+  where decWire = pickupDecLWire modElems
 
 -- Connectable = (CompName, PortNum)
 {-
@@ -204,17 +204,17 @@ searchWire wire modElems =
 -}
 cnctToConnectable :: [ModuleElement] -> [DefinePart] -> Cnct -> Result Connectable
 cnctToConnectable modElems defParts (Pin compIden portIden) = do
-  case searchComp compIden $ pickupDecPart modElems of
+  case searchComp compIden $ pickupDecLPart modElems of
     Left msg -> case searchItfc (suffixIden ('-' : getToken compIden) portIden) modElems of
       Nothing -> Left msg
       Just i  -> Right $ ConItfc (suffixIden ('-' : getToken compIden) portIden)
     Right p -> do
-      (partIden, partType) <- searchComp compIden $ pickupDecPart modElems
+      (partIden, partType) <- searchComp compIden $ pickupDecLPart modElems
       partInfo <- searchPart partIden defParts
       portIntLit <- searchPort portIden (fst partInfo)
       Right (ConPort compIden portIntLit portIden (snd partInfo) partIden partType)
 cnctToConnectable modElems _ (Wire wireIden) = do
-  -- DecWireとDecItfcの中から該当するものがあるかどうか探す
+  -- DecLWireとDecLItfcの中から該当するものがあるかどうか探す
   case searchWire wireIden modElems of
     Nothing -> case searchItfc wireIden modElems of
       Nothing -> Left $ showPos wireIden ++  "\n\t'" ++ getToken wireIden ++ "' is not defined."
