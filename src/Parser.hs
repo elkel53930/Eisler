@@ -56,6 +56,10 @@ pickupNotImport srcElems =
 eislerFile :: Parser [SourceElement]
 eislerFile = many ( try imp <|>
                     try defPart <|>
+                    try decGPart <|>
+                    try decGWire <|>
+                    try decGItfc <|>
+                    try decGModule <|>
                     defModule )
 {-
   module/part define
@@ -128,6 +132,11 @@ decLPart = do
   dp <- decPart
   return $ DecLPart dp
 
+decGPart :: Parser SourceElement
+decGPart = do
+  dp <- decPart
+  return $ DecGPart dp
+
 decWire :: Parser [WireIden]
 decWire = do
   stringSp kwdDecLWire
@@ -140,6 +149,10 @@ decLWire = do
   w <- decWire
   return $ DecLWire w
 
+decGWire :: Parser SourceElement
+decGWire = do
+  w <- decWire
+  return $ DecGWire w
 
 decItfc :: Parser [ItfcIden]
 decItfc = do
@@ -152,6 +165,11 @@ decLItfc :: Parser ModuleElement
 decLItfc = do
   i <- decItfc
   return $ DecLItfc i
+
+decGItfc :: Parser SourceElement
+decGItfc = do
+  i <- decItfc
+  return $ DecGItfc i
 
 decModule :: Parser DeclareModule
 decModule = do
@@ -166,6 +184,11 @@ decLModule :: Parser ModuleElement
 decLModule = do
   dm <- decModule
   return $ DecLMod dm
+
+decGModule :: Parser SourceElement
+decGModule = do
+  dm <- decModule
+  return $ DecGMod dm
 
 {-
   ConExpr

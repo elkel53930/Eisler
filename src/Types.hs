@@ -41,7 +41,10 @@ type ConnectExpression = (Cnct, [BCnct], Cnct)
 data SourceElement = Import ImpFile
                    | DefPart DefinePart
                    | DefMod DefineModule
-                   | DecGPart DeclarePart deriving Show
+                   | DecGMod DeclareModule
+                   | DecGPart DeclarePart
+                   | DecGWire [WireIden]
+                   | DecGItfc [ItfcIden] deriving Show
 
 data ModuleElement = DecLMod DeclareModule
                    | DecLPart DeclarePart
