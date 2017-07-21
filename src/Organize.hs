@@ -11,8 +11,20 @@ organize parsed name = do
   srcElems <- checkOverlap parsed name
   (_,(_,modElems)) <- searchMod (snd $ divideSrc srcElems) name
   modElems' <- expandModuleElements srcElems [name] modElems ( '-' : name )
+  let modElems'' = mergeDeclare parsed modElems'
 --  Left $ show modElems'
-  convertToPort modElems' (fst $ divideSrc srcElems) $ expansionCnct . pickupConExpr $ modElems'
+  convertToPort modElems'' (fst $ divideSrc srcElems) $ expansionCnct . pickupConExpr $ modElems'
+
+mergeDeclare :: [SourceElement] -> [ModuleElement] -> [ModuleElement]
+--mergeDeclare _ (Left err) = Left err
+mergeDeclare [] modElems = modElems
+mergeDeclare (t:ts) ms =
+  case t of
+    DecGMod  m -> (DecLMod  m) : ms
+    DecGWire w -> (DecLWire w) : ms
+    DecGPart p -> (DecLPart p) : ms
+    DecGItfc i -> (DecLItfc i) : ms
+    otherwise  -> (mergeDeclare ts ms)
 
 checkOverlap :: [SourceElement] -> ModuleName -> Result [SourceElement]
 checkOverlap srcElems mname = do
@@ -27,8 +39,12 @@ getIdens (t:ts) = name ++ getIdens ts where
   name =
     case t of
       DefPart (pname, (_, _)) -> [pname]
-      DefMod (mname, (_, m)) -> mname : getIdensMod (getToken mname) m
-      Import _ -> []
+      DefMod (mname, (_, m))  -> mname : getIdensMod (getToken mname) m
+      Import _                -> []
+      DecGMod (mname,_)       -> mname
+      DecGPart (pname,_,_)    -> pname
+      DecGWire (wname)        -> wname
+      DecGItfc (iname)        -> iname
 
 -- [ModuleElement]内の識別子の一覧を返す
 getIdensMod :: String -> [ModuleElement] -> [Token String]
@@ -64,7 +80,7 @@ for :: (a -> Result [b]) -> [a] -> Result [b]
 for _ [] = Right []
 for f (c:cs) = (++) <$> f c <*> for f cs
 
--- Module内の識別子にサフィックスをつける
+-- Module内で宣言された識別子にサフィックスをつける
 expandModuleElements :: [SourceElement] -> [ModuleName] -> [ModuleElement] -> Suffix -> Result [ModuleElement]
 expandModuleElements _ _ [] _ = Right []
 expandModuleElements srcElems mns (m:ms) suf = (++) <$> m' <*> ( expandModuleElements srcElems mns ms suf ) where
@@ -101,6 +117,10 @@ divideSrc ((DefPart p):ts) = (p:ps,ms) where
 divideSrc ((DefMod m):ts) = (ps,m:ms) where
   (ps,ms) = divideSrc ts
 divideSrc ((Import _):ts) = divideSrc ts
+divideSrc ((DecGPart _):ts) =divideSrc ts
+divideSrc ((DecGMod _):ts) =divideSrc ts
+divideSrc ((DecGWire _):ts) =divideSrc ts
+divideSrc ((DecGItfc _):ts) =divideSrc ts
 
 pickupDecLPart :: [ModuleElement] -> [DeclarePart]
 pickupDecLPart modElems = map(\(DecLPart p) -> p) $ filter (\x -> case x of
