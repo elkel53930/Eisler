@@ -68,6 +68,7 @@ showBom all@((pt,_):xs) = concat
   , "|", mb $ getToken <$> pt                   -- Part Type
   , "|", show $ length all                      -- Qty.
   , "|", mb $ rsSearch <$> pt                   -- RS
+  , ", ", mb $ googleSearch <$> pt              -- Google
   , ", ", mb $ digiKeySearch <$> pt              -- DigiKey
   , ", ", mb $ chip1Search <$> pt                -- Chip1Stop
   , "|\n"
@@ -86,6 +87,7 @@ makeSearch title url part = concat
 digiKeySearch = makeSearch "Digikey" "https://www.digikey.jp/products/ja?keywords="
 rsSearch = makeSearch "RS" "http://jp.rs-online.com/web/c/?sra=oss&r=t&searchTerm="
 chip1Search = makeSearch "Chip1Stop" "http://www.chip1stop.com/search.do?classCd=&did=&keyword="
+googleSearch = makeSearch "Google" "https://www.google.co.jp/search?q="
 
 {-
   パーツインフォメーション
