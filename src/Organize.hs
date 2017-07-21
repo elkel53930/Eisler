@@ -16,33 +16,32 @@ organize parsed name = do
 
 checkOverlap :: [SourceElement] -> ModuleName -> Result [SourceElement]
 checkOverlap srcElems mname = do
-  case (\input -> input \\ nub input) $ getIdens srcElems mname of
+  case (\input -> input \\ nub input) $ getIdens srcElems of
     [] -> Right srcElems
     overlaps -> Left $ getOverlapsError overlaps
 
 -- [SourceElement]内の識別子の一覧を返す。
-getIdens :: [SourceElement] -> ModuleName -> [Token String]
-getIdens [] _ = []
-getIdens (t:ts) tagMod = name ++ getIdens ts tagMod where
+getIdens :: [SourceElement] -> [Token String]
+getIdens [] = []
+getIdens (t:ts) = name ++ getIdens ts where
   name =
     case t of
       DefPart (pname, (_, _)) -> [pname]
-      DefMod (mname, (_, m)) ->
-        if mname .== tagMod
-          then (mname) : getIdensMod m
-          else []
+      DefMod (mname, (_, m)) -> mname : getIdensMod (getToken mname) m
       Import _ -> []
 
 -- [ModuleElement]内の識別子の一覧を返す
-getIdensMod :: [ModuleElement] -> [Token String]
-getIdensMod [] = []
-getIdensMod (t:ts) =
+getIdensMod :: String -> [ModuleElement] -> [Token String]
+getIdensMod _ [] = []
+getIdensMod postfix (t:ts) =
   case t of
-    DecLPart (cname, _, _) -> cname ++ (getIdensMod ts)
-    DecLWire (wname   ) -> wname ++ (getIdensMod ts)
-    DecLMod  (mname, _) -> mname ++ (getIdensMod ts)
-    DecLItfc (iname   ) -> iname ++ (getIdensMod ts)
-    ConExpr _ -> getIdensMod ts
+    DecLPart (cname, _, _) -> (pre cname) ++ (getIdensMod postfix ts)
+    DecLWire (wname   ) -> (pre wname) ++ (getIdensMod postfix ts)
+    DecLMod  (mname, _) -> (pre mname) ++ (getIdensMod postfix ts)
+    DecLItfc (iname   ) -> (pre iname) ++ (getIdensMod postfix ts)
+    ConExpr _ -> getIdensMod postfix ts
+    where
+      pre = map (\(Token name pos) -> Token (name++"@"++postfix) pos)
 
 getOverlapsError :: [Token String] -> String
 getOverlapsError ts =
