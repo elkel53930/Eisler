@@ -21,6 +21,7 @@ type PortIntLit = IntLit
 type PortIden = Identify
 type ModuleIden = Identify
 type CompIden = Identify
+type CnctIden = Identify
 type PartType = StrLit
 type ImpFile = StrLit
 

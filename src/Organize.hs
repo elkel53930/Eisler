@@ -83,7 +83,7 @@ for f (c:cs) = (++) <$> f c <*> for f cs
 -- Module内で宣言された識別子にサフィックスをつける
 expandModuleElements :: [SourceElement] -> [ModuleName] -> [ModuleElement] -> Suffix -> Result [ModuleElement]
 expandModuleElements _ _ [] _ = Right []
-expandModuleElements srcElems mns (m:ms) suf = (++) <$> m' <*> ( expandModuleElements srcElems mns ms suf ) where
+expandModuleElements srcElems mns modElems@(m:ms) suf = (++) <$> m' <*> ( expandModuleElements srcElems mns ms suf ) where
    m' = case m of
       DecLMod  (cs,m)  -> for (\x -> do
         defMod <- searchMod (snd $ divideSrc srcElems) (getToken m)
@@ -92,15 +92,30 @@ expandModuleElements srcElems mns (m:ms) suf = (++) <$> m' <*> ( expandModuleEle
       DecLWire w      -> Right [DecLWire $ map (suffixIden suf) w]
       DecLItfc i      -> Right [DecLItfc $ map( suffixIden suf) i]
       ConExpr (cr,bs,cl) ->
-        Right [ConExpr (suffixCnct cr suf, suffixBCnct bs suf, suffixCnct cl suf)]
+          Left $ show modElems
+--        Right [ConExpr (suffixCnct target suf cr, suffixBCnct target suf bs, suffixCnct target suf cl)]
+        where target = localComp modElems
 
-suffixCnct :: Cnct -> Suffix -> Cnct
-suffixCnct (Pin c p) suf = Pin (suffixIden suf c) p
-suffixCnct (Wire w)  suf = Wire $ suffixIden suf w
+localComp :: [ModuleElement] -> [CompIden]
+localComp [] = []
+localComp (m:ms) =
+  case m of
+    DecLMod  (names,_)   -> names ++ localComp ms
+    DecLPart (names,_,_) -> names ++ localComp ms
+    DecLWire names       -> names ++ localComp ms
+    DecLItfc names       -> names ++ localComp ms
+    otherwise            -> localComp ms
 
-suffixBCnct :: [BCnct] -> Suffix -> [BCnct]
-suffixBCnct [] _ = []
-suffixBCnct (b:bs) suf = b' : (suffixBCnct bs suf) where
+suffixCnct :: [CompIden] -> Suffix -> Cnct -> Cnct
+suffixCnct target suf (Pin c p) = Pin (suffixIden suf c) p
+{-  case lookupWith ((== getToken c) . getToken) target of
+    Just _  -> Pin (suffixIden suf c) p
+    Nothing -> (Pin c p)-}
+suffixCnct target suf(Wire w)  = Wire $ suffixIden suf w
+
+suffixBCnct :: [CompIden] -> Suffix -> [BCnct] -> [BCnct]
+suffixBCnct _ _ [] = []
+suffixBCnct target suf (b:bs) = b' : (suffixBCnct target suf bs) where
   b' = case b of
     BPin pr c pl -> BPin pr (suffixIden suf c) pl
     BWire w      -> BWire $ suffixIden suf w
