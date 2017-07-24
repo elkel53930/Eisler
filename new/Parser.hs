@@ -47,6 +47,9 @@ eislerFile = many ( try parseDfPa <|>
                     try parseDcIf <|>
                     try parseDcPa )
 -}
+
+-- Define Part
+
 parseDfPa :: Parser SourceElement
 parseDfPa = do
   stringSp kwdDefPart
@@ -54,14 +57,30 @@ parseDfPa = do
   charSp '('
   ports <- sepBy parsePortAliases $ char ','
   charSp ')'
-  charSp '{'
   props <- parseProperties
-  charSp '}'
   charSp ';'
   return . SeDefPart $ DfPa name ports props
 
+-- parseDcPa
+
+parseDcPa :: Parser DcPa
+parseDcPa = do
+  stringSp kwdDecPart
+  names <- sepBy1 iden $ char ','
+  props <- parseProperties
+  stringSp kwdAs
+  part <- iden;
+  charSp ';'
+  return $ DcPa names part props
+
+-- Properties
+
 parseProperties :: Parser [Property]
-parseProperties = sepBy parseProperty $ char ','
+parseProperties = do
+  charSp '{'
+  props <- sepBy parseProperty $ char ','
+  charSp '}'
+  return props
   where
     parseProperty = do
       iden <- parsePropertyItem
@@ -74,6 +93,8 @@ parseProperties = sepBy parseProperty $ char ','
                         try (stringSp kwdPropertyModel) <|>
                         try (stringSp kwdPropertyMani) <|>
                         (stringSp kwdPropertyDscr)
+
+-- Port Aliases
 
 parsePortAliases :: Parser PortAlias
 parsePortAliases = sepBy iden $ char ':'
