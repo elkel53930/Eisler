@@ -21,24 +21,6 @@ parseEis file = do
   handle <- openFile file ReadMode
   source <- hGetContents handle
   return $ parse eislerFile file source
-{-
-parseEisFiles :: [ImpFile] -> [SourceElement] -> IO(Either ParseError [SourceElement])
-parseEisFiles [] srcElems = return $ Right srcElems
-parseEisFiles (f:fs) srcElems = do
-  handle <- openFile file ReadMode
-  source <- hGetContents handle
-  case parse eislerFile file source of
-    Right parsed -> do
-      childlenResult <- parseEisFiles childlen elements
-      case childlenResult of
-        Right childlenElements -> parseEisFiles fs childlenElements
-        Left err -> return $ Left err
-      where
-        childlen = pickupImport (parsed++srcElems)
-        elements = pickupNotImport (parsed++srcElems)
-    Left err -> return $ Left err
-  where file = getToken f
--}
 
 pickupImport :: [SourceElement] -> [ImpFile]
 pickupImport srcElems =
