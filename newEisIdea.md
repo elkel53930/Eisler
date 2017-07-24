@@ -18,7 +18,7 @@ importは廃止。同じディレクトリののeファイルは全部処理さ�
 ## defpart
 
 ```
-defpart R(1,2){ref="R"} // giditのみからなる文字列は識別子扱い。
+defpart R(1,2){ref="R"} // digitで始まる文字列も識別子扱い。
 defpart Btt(Plus,Minus){ref="BT"} // なのでこういう書き方もOK
 defpart SOP4(1:VCC, 2:IN, 3:OUT, 4:GND){ref="IC"} // ピン名のエイリアスは:でつなげて書く
 ```
@@ -101,27 +101,11 @@ part r1 {value="110k 5% 1608"} as ChipR; // OK
 
 #### ポートの指定
 
-ポートの指定には`<`と`>`を使う。
-rというpartの1というピンを左側に結線するなら`1<r`、右側なら`r>1`、両方なら`1<r>1`
+ポートの指定には`.`を使う。
+rというpartの1というピンを左側に結線するなら`1.r`、右側なら`r.1`、両方なら`1.r.1`
 
 ピン名はエイリアスで宣言されているどの名前でもいい。
-`1:P14:MTIOC`と定義されていれば`1<ic` `P14<ic` `MTIOC<ic`は同じ意味。
-
-#### ポートの省略
-
-ポート指定を省略すると、左側の場合は定義で一番最初に書かれているポートとして、右側の場合は2番目に書かれているポートとして扱われる。
-
-```
-defpart ChipR(1,2){ref="R", type="Chip Register"}
-defpart ChipLED(2:A,1:K){ref="LD", type="Chip LED"}
-...
-part r as ChipR;
-part ld as ChipLED;
-...
-VCC - r - ld - GND;
-VCC - 1<r>2 - 2<ld>K - GND;
-// ↑この２行は同じ意味
-```
+`1:P14:MTIOC`と定義されていれば`1.ic` `P14.ic` `MTIOC.ic`は同じ意味。
 
 #### WireとInterface
 
