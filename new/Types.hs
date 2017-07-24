@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
---Module Types where
+module Types where
 
 import Text.ParserCombinators.Parsec
 import Text.Parsec.Pos
@@ -13,8 +13,6 @@ data Token a = Token a SourcePos deriving Show
 type Identify = Token String
 type StrLit = Token String
 type IntLit = Token Int
-
-
 
 type WireIden = Identify
 type ItfcIden = Identify
@@ -36,9 +34,11 @@ data BCnct = BPin { bpinLeftPortName :: PortIden
                   , bpinRightPortName :: PortIden }
            | BWire { bwireWireName :: WireIden } deriving Show
 
-data PropertyItem = PropRef | PropType | PropValue | PropModel | PropMani | PropDscr deriving (Show, Eq)
+--data PropertyItem = PropRef | PropType | PropValue | PropModel | PropMani | PropDscr deriving (Show, Eq, Ord)
+
 type PropertyValue = StrLit
-type Property = Map.Map PropertyItem PropertyValue
+type PropertyIden = String
+type Property = (PropertyIden, PropertyValue)
 
 type Reference = String
 type WireName = String
@@ -76,12 +76,12 @@ data Expr = Expr { exprRight :: Cnct
                  , exprBoth :: BCnct
                  , exprLeft :: Cnct } deriving Show
 
-data Src = Src { srcDefPart :: DfPa
-               , srcDefMod :: DfMo
-               , srcDecMod :: DcMo
-               , srcDecWire :: DcWi
-               , srcDecItfc :: DcIf
-               , srcDecPart :: DcPa
+data Src = Src { srcDefPart :: [DfPa]
+               , srcDefMod :: [DfMo]
+               , srcDecMod :: [DcMo]
+               , srcDecWire :: [DcWi]
+               , srcDecItfc :: [DcIf]
+               , srcDecPart :: [DcPa]
                } deriving Show
 
 data Net = Net { netWireName :: WireIden
