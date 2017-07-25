@@ -53,11 +53,11 @@ assortSourceElement ((SeDecWire dcwi):xs) = (assortSourceElement xs) & _5 %~ (dc
 assortSourceElement ((SeDecItfc dcif):xs) = (assortSourceElement xs) & _6 %~ (dcif:)
 
 parseSrc :: Parser [SourceElement]
-parseSrc =    many ( try parseDfPa <|>
-                     try parseDfMo <|>
-                     try parseGDcPa <|>
-                     try parseGDcWi <|>
-                     try parseGDcIf <|>
+parseSrc =    many ( parseDfPa <|>
+                     parseDfMo <|>
+                     parseGDcPa <|>
+                     parseGDcWi <|>
+                     parseGDcIf <|>
                      parseGDcMo )
 
 
@@ -78,7 +78,7 @@ parseSrc = do
 
 parseDfPa :: Parser SourceElement
 parseDfPa = do
-  stringSp kwdDefPart
+  try $ stringSp kwdDefPart
   name <- iden
   charSp '('
   ports <- sepBy parsePortAliases $ char ','
@@ -98,7 +98,7 @@ assortModuleElement ((MeExpr    expr):xs) = (assortModuleElement xs) & _5 %~ (ex
 
 parseDfMo :: Parser SourceElement
 parseDfMo = do
-  stringSp kwdDefModule
+  try $ stringSp kwdDefModule
   name <- iden
   charSp '('
   ports <- sepBy parsePortAliases $ char ','
@@ -129,7 +129,7 @@ parseGDcWi = do
 
 parseDcWi :: Parser DcWi
 parseDcWi = do
-  stringSp kwdDecWire
+  try $ stringSp kwdDecWire
   names <- sepBy1 iden $ char ','
   charSp ';'
   return $ DcWi names
@@ -149,7 +149,7 @@ parseGDcIf = do
 
 parseDcIf :: Parser DcIf
 parseDcIf = do
-  stringSp kwdDecItfc
+  try $ stringSp kwdDecItfc
   names <- sepBy1 iden $ char ','
   charSp ';'
   return $ DcIf names
@@ -170,7 +170,7 @@ parseLDcPa = do
 
 parseDcPa :: Parser DcPa
 parseDcPa = do
-  stringSp kwdDecPart
+  try $ stringSp kwdDecPart
   names <- sepBy1 iden $ char ','
   props <- option [] parseProperties
   stringSp kwdAs
@@ -194,7 +194,7 @@ parseLDcMo = do
 
 parseDcMo :: Parser DcMo
 parseDcMo = do
-  stringSp kwdDecMod
+  try $ stringSp kwdDecMod
   names <- sepBy1 iden $ char ','
   stringSp kwdAs
   m <- iden
