@@ -73,7 +73,7 @@ data DcWi = DcWi { dcwiNames :: [Identify]} deriving Show
 data DcIf = DcIf { dcifNames :: [ItfcIden]} deriving Show
 
 data Expr = Expr { exprRight :: Cnct
-                 , exprBoth :: BCnct
+                 , exprBoth :: [BCnct]
                  , exprLeft :: Cnct } deriving Show
 
 data Src = Src { srcDefPart :: [DfPa]

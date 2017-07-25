@@ -57,21 +57,56 @@ parseDfPa = do
   charSp '('
   ports <- sepBy parsePortAliases $ char ','
   charSp ')'
-  props <- parseProperties
+  props <- option [] parseProperties
   charSp ';'
   return . SeDefPart $ DfPa name ports props
 
--- parseDcPa
+-- Declare part
+
+-- for Glocal
+parseGDcPa :: Parser SourceElement
+parseGDcPa = do
+  res <- parseDcPa
+  return $ SeDecPart res
+
+-- for Local
+parseLDcPa :: Parser ModuleElement
+parseLDcPa = do
+  res <- parseDcPa
+  return $ MeDecPart res
 
 parseDcPa :: Parser DcPa
 parseDcPa = do
   stringSp kwdDecPart
   names <- sepBy1 iden $ char ','
-  props <- parseProperties
+  props <- option [] parseProperties
   stringSp kwdAs
   part <- iden;
   charSp ';'
   return $ DcPa names part props
+
+-- Declare module
+
+-- for Global
+parseGDcMo :: Parser SourceElement
+parseGDcMo = do
+  res <- parseDcMo
+  return $ SeDecMod res
+
+-- for Local
+parseLDcMo :: Parser ModuleElement
+parseLDcMo = do
+  res <- parseDcMo
+  return $ MeDecMod res
+
+parseDcMo :: Parser DcMo
+parseDcMo = do
+  stringSp kwdDecMod
+  names <- sepBy1 iden $ char ','
+  stringSp kwdAs
+  m <- iden
+  charSp ';'
+  return $ DcMo names m
 
 -- Properties
 
@@ -98,6 +133,68 @@ parseProperties = do
 
 parsePortAliases :: Parser PortAlias
 parsePortAliases = sepBy iden $ char ':'
+
+-- Expression
+
+{-
+  ConExpr
+-}
+
+rCnctCompPort :: Parser Cnct
+rCnctCompPort = do
+  c <- iden
+  char '.'
+  p <- iden
+  return $ Pin c p
+
+lCnctCompPort :: Parser Cnct
+lCnctCompPort = do
+  p <- iden
+  char '.'
+  c <- iden
+  return $ Pin c p
+
+wire :: Parser Cnct
+wire = do
+  l <- iden
+  return $ Wire l
+
+bCnctCompPort :: Parser BCnct
+bCnctCompPort = do
+  pl <- iden
+  char '.'
+  c <- iden
+  char '.'
+  pr <- iden
+  return $ BPin pl c pr
+
+bWire :: Parser BCnct
+bWire = do
+  l <- iden
+  return $ BWire l
+
+rCnct :: Parser Cnct
+rCnct = do
+  result <- try rCnctCompPort <|> wire
+  charSp '-'
+  return result
+
+lCnct :: Parser Cnct
+lCnct = try lCnctCompPort <|> wire
+
+bCnct :: Parser BCnct
+bCnct = do
+  result <- try bCnctCompPort <|> bWire
+  charSp '-'
+  return result
+
+parseExpr :: Parser ModuleElement
+parseExpr = do
+  r  <- rCnct
+  bs <- many $ try bCnct
+  l <- lCnct
+  charSp ';'
+  return . MeExpr $ Expr r bs l
 
 {-
   Common
