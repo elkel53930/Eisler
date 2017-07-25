@@ -1,8 +1,11 @@
 import Types
 import qualified Data.Map as Map
-import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec hiding(try)
+import Text.Parsec
 import Text.Parsec.Pos
 import Text.Parsec.Char
+import Control.Lens
+import System.IO
 
 kwdDefModule = "defmodule"
 kwdDefPart = "defpart"
@@ -32,20 +35,43 @@ data ModuleElement = MeDecMod DcMo
                    | MeDecItfc DcIf
                    | MeExpr Expr deriving (Show)
 
-{-
-parseEisler :: FilePath -> IO(Either ParseError Src)
+
+--parseEisler :: FilePath -> IO(Either ParseError Src)
 parseEisler file = do
   handle <- openFile file ReadMode
   source <- hGetContents handle
-  return $ parse eislerFile file source
+  return $ parse parseSrc file source
 
-eislerFile :: Parser [SourceElement]
-eislerFile = many ( try parseDfPa <|>
-                    try parseDfMo <|>
-                    try parseDcMo <|>
-                    try parseDcWi <|>
-                    try parseDcIf <|>
-                    try parseDcPa )
+-- Src
+assortSourceElement :: [SourceElement] -> ([DfPa],[DfMo],[DcPa],[DcMo],[DcWi],[DcIf])
+assortSourceElement [] = ([],[],[],[],[],[])
+assortSourceElement ((SeDefPart dfpa):xs) = (assortSourceElement xs) & _1 %~ (dfpa:)
+assortSourceElement ((SeDefMod  dfmo):xs) = (assortSourceElement xs) & _2 %~ (dfmo:)
+assortSourceElement ((SeDecPart dcpa):xs) = (assortSourceElement xs) & _3 %~ (dcpa:)
+assortSourceElement ((SeDecMod  dcmo):xs) = (assortSourceElement xs) & _4 %~ (dcmo:)
+assortSourceElement ((SeDecWire dcwi):xs) = (assortSourceElement xs) & _5 %~ (dcwi:)
+assortSourceElement ((SeDecItfc dcif):xs) = (assortSourceElement xs) & _6 %~ (dcif:)
+
+parseSrc :: Parser [SourceElement]
+parseSrc =    many ( try parseDfPa <|>
+                     try parseDfMo <|>
+                     try parseGDcPa <|>
+                     try parseGDcWi <|>
+                     try parseGDcIf <|>
+                     parseGDcMo )
+
+
+{-
+parseSrc :: Parser Src
+parseSrc = do
+  srcElems <- many1(try parseDfMo <|>
+                    try parseDfPa <|>
+                    try parseGDcPa <|>
+                    try parseGDcWi <|>
+                    try parseGDcIf <|>
+                     parseGDcMo )
+  let (dfpas, dfmos, dcpas, dcmos, dcwis, dcifs) = assortSourceElement srcElems
+  return $ Src dfpas dfmos dcpas dcmos dcwis dcifs
 -}
 
 -- Define Part
@@ -58,8 +84,75 @@ parseDfPa = do
   ports <- sepBy parsePortAliases $ char ','
   charSp ')'
   props <- option [] parseProperties
-  charSp ';'
   return . SeDefPart $ DfPa name ports props
+
+-- Define Module
+
+assortModuleElement :: [ModuleElement] -> ([DcPa],[DcMo],[DcWi],[DcIf],[Expr])
+assortModuleElement [] = ([],[],[],[],[])
+assortModuleElement ((MeDecPart dcpa):xs) = (assortModuleElement xs) & _1 %~ (dcpa:)
+assortModuleElement ((MeDecMod  dcmo):xs) = (assortModuleElement xs) & _2 %~ (dcmo:)
+assortModuleElement ((MeDecWire dcwi):xs) = (assortModuleElement xs) & _3 %~ (dcwi:)
+assortModuleElement ((MeDecItfc dcif):xs) = (assortModuleElement xs) & _4 %~ (dcif:)
+assortModuleElement ((MeExpr    expr):xs) = (assortModuleElement xs) & _5 %~ (expr:)
+
+parseDfMo :: Parser SourceElement
+parseDfMo = do
+  stringSp kwdDefModule
+  name <- iden
+  charSp '('
+  ports <- sepBy parsePortAliases $ char ','
+  charSp ')'
+  charSp '{'
+  modElems <- many parseModuleElements
+  charSp '}'
+  let (dcpas, dcmos, dcwis, dcifs, exprs) = assortModuleElement modElems
+  return . SeDefMod $ DfMo name ports dcpas dcmos dcwis dcifs exprs
+  where
+    parseModuleElements = try parseExpr <|>
+                          ( parseLDcMo <|>
+                            parseLDcPa <|>
+                            parseLDcWi <|>
+                            parseLDcIf )
+
+
+-- Declare wire
+parseLDcWi :: Parser ModuleElement
+parseLDcWi = do
+  res <- parseDcWi
+  return $ MeDecWire res
+
+parseGDcWi :: Parser SourceElement
+parseGDcWi = do
+  res <- parseDcWi
+  return $ SeDecWire res
+
+parseDcWi :: Parser DcWi
+parseDcWi = do
+  stringSp kwdDecWire
+  names <- sepBy1 iden $ char ','
+  charSp ';'
+  return $ DcWi names
+
+
+-- Declare Interface
+parseLDcIf :: Parser ModuleElement
+parseLDcIf = do
+  res <- parseDcIf
+  return $ MeDecItfc res
+
+parseGDcIf :: Parser SourceElement
+parseGDcIf = do
+  res <- parseDcIf
+  return $ SeDecItfc res
+
+
+parseDcIf :: Parser DcIf
+parseDcIf = do
+  stringSp kwdDecItfc
+  names <- sepBy1 iden $ char ','
+  charSp ';'
+  return $ DcIf names
 
 -- Declare part
 
@@ -122,11 +215,11 @@ parseProperties = do
       charSp '='
       value <- strLit
       return $ (iden,value)
-    parsePropertyItem = try (stringSp kwdPropertyRef) <|>
+    parsePropertyItem = try (stringSp kwdPropertyModel) <|>
+                        try (stringSp kwdPropertyMani) <|>
                         try (stringSp kwdPropertyType) <|>
                         try (stringSp kwdPropertyValue) <|>
-                        try (stringSp kwdPropertyModel) <|>
-                        try (stringSp kwdPropertyMani) <|>
+                        try (stringSp kwdPropertyRef) <|>
                         (stringSp kwdPropertyDscr)
 
 -- Port Aliases
@@ -205,29 +298,18 @@ strLit = do
   spcmnt
   pos <- getPosition
   char '"'
-  result <- many $ noneOf "\""
+  result <- many $ Text.Parsec.Char.noneOf "\""
   char '"'
   spcmnt
   return $ Token result pos
-
-intLit :: Parser IntLit
-intLit = do
-  spcmnt
-  pos <- getPosition
-  result <- many1 digit
-  spcmnt
-  return $ Token (read result) pos
 
 iden :: Parser Identify
 iden = do
   spcmnt
   pos <- getPosition
-  idens <- many (letter_ <|> digit)
+  idens <- many1 (letter <|> digit <|> char '_')
   spcmnt
   return $ Token idens pos
-
-letter_ :: Parser Char
-letter_ = letter <|> char '_'
 
 charSp :: Char -> Parser String
 charSp c = do

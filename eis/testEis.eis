@@ -2,6 +2,12 @@ import "Basic.eis"
 
 defpart CN(1:VCC 2:GND){ref "CN";}
 
+part powerLed "BR1111C" as LED;
+wire VCC;
+interface DIO;
+interface DIO;
+module ld as ledModule;
+
 defmodule ledModule(1:A 2:K)
 {
   part l0,l1 "BR1111C" as LED;

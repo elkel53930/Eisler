@@ -176,7 +176,7 @@ lCnct = try lCnctCompPort <|> wire
 
 bCnct :: Parser BCnct
 bCnct = do
-  result <- try bCnctCompPort <|> bWire
+  result <- try bCnctCompPort <|> try bWire
   charSp '-'
   return result
 

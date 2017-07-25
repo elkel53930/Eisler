@@ -78,10 +78,10 @@ data Expr = Expr { exprRight :: Cnct
 
 data Src = Src { srcDefPart :: [DfPa]
                , srcDefMod :: [DfMo]
+               , srcDecPart :: [DcPa]
                , srcDecMod :: [DcMo]
                , srcDecWire :: [DcWi]
                , srcDecItfc :: [DcIf]
-               , srcDecPart :: [DcPa]
                } deriving Show
 
 data Net = Net { netWireName :: WireIden
