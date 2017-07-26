@@ -52,27 +52,17 @@ assortSourceElement ((SeDecMod  dcmo):xs) = (assortSourceElement xs) & _4 %~ (dc
 assortSourceElement ((SeDecWire dcwi):xs) = (assortSourceElement xs) & _5 %~ (dcwi:)
 assortSourceElement ((SeDecItfc dcif):xs) = (assortSourceElement xs) & _6 %~ (dcif:)
 
-parseSrc :: Parser [SourceElement]
-parseSrc =    many ( parseDfPa <|>
+parseSrc :: Parser Src
+parseSrc = do
+  srcElems <- many ( parseDfPa <|>
                      parseDfMo <|>
                      parseGDcPa <|>
                      parseGDcWi <|>
                      parseGDcIf <|>
                      parseGDcMo )
-
-
-{-
-parseSrc :: Parser Src
-parseSrc = do
-  srcElems <- many1(try parseDfMo <|>
-                    try parseDfPa <|>
-                    try parseGDcPa <|>
-                    try parseGDcWi <|>
-                    try parseGDcIf <|>
-                     parseGDcMo )
   let (dfpas, dfmos, dcpas, dcmos, dcwis, dcifs) = assortSourceElement srcElems
   return $ Src dfpas dfmos dcpas dcmos dcwis dcifs
--}
+
 
 -- Define Part
 
