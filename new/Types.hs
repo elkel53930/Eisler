@@ -87,7 +87,7 @@ data Src = Src { srcDefPart :: [DfPa]
 
 data ExSrc = ExpSrc { exsrcDefPart :: [DfPa]
                     , exsrcDecPart :: [DcPa]
-                    , exsrcDecWire :: [Dcwi]
+                    , exsrcDecWire :: [DcWi]
                     , exsrcDcItfc :: [DcIf]
                     , exsrcExpr :: [Expr]
                     } deriving Show
