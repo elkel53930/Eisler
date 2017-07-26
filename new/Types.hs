@@ -76,12 +76,12 @@ data Expr = Expr { _exprRight :: Cnct
 makeLenses ''Expr
 
 data DfMo = DfMo { _dfmoName :: ModIden
-, _dfmoPortList :: [PortAlias]
-, _dfmoDecPart :: [DcPa]
-, _dfmoDecMod :: [DcMo]
-, _dfmoDecWire :: [DcWi]
-, _dfmoDecItfc :: [DcIf]
-, _dfmoExpr :: [Expr] } deriving Show
+                　, _dfmoPortList :: [PortAlias]
+                　, _dfmoDecPart :: [DcPa]
+                　, _dfmoDecMod :: [DcMo]
+                　, _dfmoDecWire :: [DcWi]
+                　, _dfmoDecItfc :: [DcIf]
+                　, _dfmoExpr :: [Expr] } deriving Show
 makeLenses ''DfMo
 
 data Src = Src { _srcDefPart :: [DfPa]
