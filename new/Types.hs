@@ -50,54 +50,65 @@ type Prefix = String
 
 type PortAlias = [PortIden]
 
-data DfPa = DfPa { dfpaName :: PartIden
-                 , dfpaPortList :: [PortAlias]
-                 , dfpaProperties :: [Property] } deriving Show
+data DfPa = DfPa { _dfpaName :: PartIden
+                 , _dfpaPortList :: [PortAlias]
+                 , _dfpaProperties :: [Property] } deriving Show
+makeLenses ''DfPa
 
-data DfMo = DfMo { dfmoName :: ModIden
-                 , dfmoPortList :: [PortAlias]
-                 , dfmoDecPart :: [DcPa]
-                 , dfmoDecMod :: [DcMo]
-                 , dfmoDecWire :: [DcWi]
-                 , dfmoDecItfc :: [DcIf]
-                 , dfmoExpr :: [Expr] } deriving Show
+data DcPa = DcPa { _dcpaNames :: [CompIden]
+                 , _dcpaPartName :: PartIden
+                 , _dcpaProperties :: [Property] } deriving Show
+makeLenses ''DcPa
 
-data DcPa = DcPa { dcpaNames :: [CompIden]
-                 , dcpaPartName :: PartIden
-                 , dcpaProperties :: [Property] } deriving Show
+data DcMo = DcMo { _dcmoNames :: [CompIden]
+                 , _dcmoModName :: ModIden } deriving Show
+makeLenses ''DcMo
 
-data DcMo = DcMo { dcmoNames :: [CompIden]
-                 , dcmoModName :: ModIden } deriving Show
+data DcWi = DcWi { _dcwiNames :: [Identify]} deriving Show
+makeLenses ''DcWi
 
-data DcWi = DcWi { dcwiNames :: [Identify]} deriving Show
+data DcIf = DcIf { _dcifNames :: [ItfcIden]} deriving Show
+makeLenses ''DcIf
 
-data DcIf = DcIf { dcifNames :: [ItfcIden]} deriving Show
+data Expr = Expr { _exprRight :: Cnct
+                 , _exprBoth :: [BCnct]
+                 , _exprLeft :: Cnct } deriving Show
+makeLenses ''Expr
 
-data Expr = Expr { exprRight :: Cnct
-                 , exprBoth :: [BCnct]
-                 , exprLeft :: Cnct } deriving Show
+data DfMo = DfMo { _dfmoName :: ModIden
+, _dfmoPortList :: [PortAlias]
+, _dfmoDecPart :: [DcPa]
+, _dfmoDecMod :: [DcMo]
+, _dfmoDecWire :: [DcWi]
+, _dfmoDecItfc :: [DcIf]
+, _dfmoExpr :: [Expr] } deriving Show
+makeLenses ''DfMo
 
-data Src = Src { srcDefPart :: [DfPa]
-               , srcDefMod :: [DfMo]
-               , srcDecPart :: [DcPa]
-               , srcDecMod :: [DcMo]
-               , srcDecWire :: [DcWi]
-               , srcDecItfc :: [DcIf]
+data Src = Src { _srcDefPart :: [DfPa]
+               , _srcDefMod :: [DfMo]
+               , _srcDecPart :: [DcPa]
+               , _srcDecMod :: [DcMo]
+               , _srcDecWire :: [DcWi]
+               , _srcDecItfc :: [DcIf]
                } deriving Show
+makeLenses ''Src
 
-data ExSrc = ExpSrc { exsrcDefPart :: [DfPa]
-                    , exsrcDecPart :: [DcPa]
-                    , exsrcDecWire :: [DcWi]
-                    , exsrcDcItfc :: [DcIf]
-                    , exsrcExpr :: [Expr]
+data ExSrc = ExpSrc { _exsrcDefPart :: [DfPa]
+                    , _exsrcDecPart :: [DcPa]
+                    , _exsrcDecWire :: [DcWi]
+                    , _exsrcDcItfc :: [DcIf]
+                    , _exsrcExpr :: [Expr]
                     } deriving Show
-
-data Net = Net { netWireName :: WireIden
-               , netConnectableSet :: Set.Set Connectable } deriving (Show,Eq)
+makeLenses ''ExSrc
 
 data Connectable = ConWire WireIden
                  | ConItfc ItfcIden
-                 | ConPort CompIden PortIntLit PortIden Reference PartIden (Maybe PartType) deriving (Show,Eq,Ord)
+                 | ConPort CompIden PortIntLit PortIden Reference PartIden (Maybe PartType) deriving (Show)
+
+data Net = Net { _netWireName :: WireIden
+               , _netConnectableSet :: Set.Set Connectable } deriving (Show)
+makeLenses ''Net
+
 type ErrorMsg = String
 type Result = Either ErrorMsg
 type Suffix = String
