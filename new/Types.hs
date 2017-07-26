@@ -93,7 +93,7 @@ data Src = Src { _srcDefPart :: [DfPa]
                } deriving Show
 makeLenses ''Src
 
-data ExSrc = ExpSrc { _exsrcDefPart :: [DfPa]
+data ExSrc = ExSrc { _exsrcDefPart :: [DfPa]
                     , _exsrcDecPart :: [DcPa]
                     , _exsrcDecWire :: [DcWi]
                     , _exsrcDcItfc :: [DcIf]
