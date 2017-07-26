@@ -46,6 +46,7 @@ type PartName = String
 type PortName = String
 type ModName = String
 type CompName = String
+type Prefix = String
 
 type PortAlias = [PortIden]
 
@@ -84,6 +85,13 @@ data Src = Src { srcDefPart :: [DfPa]
                , srcDecItfc :: [DcIf]
                } deriving Show
 
+data ExSrc = ExpSrc { exsrcDefPart :: [DfPa]
+                    , exsrcDecPart :: [DcPa]
+                    , exsrcDecWire :: [Dcwi]
+                    , exsrcDcItfc :: [DcIf]
+                    , exsrcExpr :: [Expr]
+                    } deriving Show
+
 data Net = Net { netWireName :: WireIden
                , netConnectableSet :: Set.Set Connectable } deriving (Show,Eq)
 
@@ -115,3 +123,6 @@ newToken a = Token a $ newPos "Internal" 0 0
 
 (.==) :: Eq a => Token a -> a -> Bool
 (Token x _) .== y = x == y
+
+(==.) :: Eq a => a -> Token a -> Bool
+y ==. (Token x _) = y == x
