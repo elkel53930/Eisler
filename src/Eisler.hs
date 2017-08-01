@@ -7,6 +7,7 @@ import qualified Kicad as Kicad
 import qualified Pads as Pads
 import qualified Bom as Bom
 import qualified Summary as Summary
+import qualified ConInfo as ConInfo
 --import qualified Output as O
 import Common
 import Text.ParserCombinators.Parsec
@@ -49,6 +50,7 @@ translate args = do
           writeFile (changeExt "net" eisFile) $ Kicad.output nets
           writeFile (changeExt "asc" eisFile) $ Pads.output nets
           writeFile (changeExt "csv" eisFile) $ Bom.output nets
+          writeFile "ConInfo.md" $ ConInfo.output nets
           Summary.output eisFile "README.md" nets
         Left l      -> putStrLn l
     Left err -> putStrLn $ show err
