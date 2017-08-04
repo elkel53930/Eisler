@@ -232,10 +232,9 @@ iden :: Parser Identify
 iden = do
   spcmnt
   pos <- getPosition
-  headLetter <- letter_
-  tails <- many (letter_ <|> digit)
+  i <- many1 (letter_ <|> digit)
   spcmnt
-  return $ Token (headLetter : tails) pos
+  return $ Token i pos
 
 letter_ :: Parser Char
 letter_ = letter <|> char '_'
