@@ -1,3 +1,10 @@
+module Parser where
+
+{-
+  構文解析する
+  FilePath -> IO (Either ParseError Src)
+-}
+
 import Types
 import qualified Data.Map as Map
 import Text.ParserCombinators.Parsec hiding(try)
@@ -36,7 +43,7 @@ data ModuleElement = MeDecMod DcMo
                    | MeExpr Expr deriving (Show)
 
 
---parseEisler :: FilePath -> IO(Either ParseError Src)
+parseEisler :: FilePath -> IO(Either ParseError Src)
 parseEisler file = do
   handle <- openFile file ReadMode
   source <- hGetContents handle
