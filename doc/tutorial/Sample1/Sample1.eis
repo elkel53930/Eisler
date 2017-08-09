@@ -4,7 +4,7 @@ defpart LED(1:A 2:K){ref "LD";}
 
 defmodule main()
 {
-  part cn "B2B-EH" as CN;
+  part cn "PSS-410153-02" as CN;
   part led "BR1111C" as LED;
   part r "330 5% 1608" as R;
 

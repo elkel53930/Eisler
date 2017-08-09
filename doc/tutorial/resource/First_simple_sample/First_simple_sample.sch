@@ -29,13 +29,14 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:valves
+LIBS:First_simple_sample-cache
 EELAYER 27 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title ""
-Date "8 aug 2017"
+Date "9 aug 2017"
 Rev ""
 Comp ""
 Comment1 ""
@@ -59,7 +60,7 @@ L CONN_2 CN1
 U 1 1 59891976
 P 4250 3800
 F 0 "CN1" H 4250 4000 50  0000 C CNN
-F 1 "B2B-EH" H 4250 3600 50  0000 C CNN
+F 1 "PSS-410153-02" H 4250 3600 50  0000 C CNN
 F 2 "~" H 4250 3800 60  0000 C CNN
 F 3 "~" H 4250 3800 60  0000 C CNN
 	1    4250 3800
