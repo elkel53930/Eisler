@@ -12,7 +12,7 @@
 テキストエディタに以下のソースコードを打ち込み、「Sample1.eis」というファイル名で保存します。
 このソースコードが何を意味するかは後ほど説明します。
 
-```tu01.eis
+```Sample1.eis
 defpart CN(1:VIN 2:GND){ref "CN";}
 defpart R(1:1 2:2){ref "R";}
 defpart LED(1:A 2:K){ref "LD";}
