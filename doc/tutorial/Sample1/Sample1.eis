@@ -1,0 +1,17 @@
+defpart CN(1:VIN 2:GND){ref "CN";}
+defpart R(1:1 2:2){ref "R";}
+defpart LED(1:A 2:K){ref "LD";}
+
+defmodule main()
+{
+  part cn "B2B-EH" as CN;
+  part led "BR1111C" as LED;
+  part r "330 5% 1608" as R;
+
+  wire VIN, GND;
+
+  cn.VIN - VIN;
+  cn.GND - GND;
+
+  VIN - A.led.K - 1.r.2 - GND;
+}

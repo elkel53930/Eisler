@@ -1,11 +1,14 @@
 import "Basic.eis"
 
-defpart CN(1:VCC 2:GND){ref "CN";}
+defpart CN(00001:VCC 0000000000000000002:GND){ref "CN";}
+defpart ZEROTEST(000000:IN 1000:OUT){ref "ZT";}
 
 defmodule ledModule(1:A 2:K)
 {
   part l0,l1 "BR1111C" as LED;
+  part z as ZEROTEST;
   A - A.l0.K - A.l1.K - K;
+  A - IN.z.OUT - K;
 }
 
 defmodule main()
