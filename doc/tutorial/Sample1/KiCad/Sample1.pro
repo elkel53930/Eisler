@@ -1,6 +1,6 @@
-update=2017/08/09 13:30:30
+update=2017/08/09 17:47:18
 version=1
-last_client=kicad
+last_client=pcbnew
 [cvpcb]
 version=1
 NetIExt=net
@@ -45,6 +45,8 @@ LibName27=opto
 LibName28=atmel
 LibName29=contrib
 LibName30=valves
+[general]
+version=1
 [pcbnew]
 version=1
 LastNetListRead=
@@ -82,5 +84,3 @@ LibName13=led
 LibName14=dip_sockets
 LibName15=pga_sockets
 LibName16=valves
-[general]
-version=1
