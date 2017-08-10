@@ -2,13 +2,9 @@
 
 ## Eislerのインストール
 
-以下の説明はgitとghcがインストールされている前提です。
+### Windowsでのインストール
 
 Eislerのインストールは単純です。
-ソースコードをGitHubからダウンロードし、ビルドするだけです。
+バイナリファイルをダウンロードし、パスの通ったディレクトリに置くだけです。
 
-$ git clone https://github.com/elkel53930/Eisler0.1
-```
-$ cd src
-$ ghc Eisler
-```
+https://github.com/elkel53930/Eisler/releases/ でWindows用のバイナリを配布しています。
