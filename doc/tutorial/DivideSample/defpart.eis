@@ -1,0 +1,4 @@
+defpart R(1:1 2:2){ref "R";}
+defpart LED(1:A 2:K){ref "LD";}
+defpart NPNTransister(1:E 2:C 3:B){ref "TR";}
+defpart CONN5(1:1 2:2 3:3 4:4 5:5){ref "CN";}

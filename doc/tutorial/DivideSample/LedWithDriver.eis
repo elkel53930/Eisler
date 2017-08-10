@@ -1,0 +1,10 @@
+defmodule LedWithDriver(1:VPLUS 2:GND 3:IN)
+{
+  part r_led "330 5% 1608" as R;
+  part r_base "1K 5% 1608" as R;
+  part led "BR1111C" as LED;
+  part tr "2SC1815" as NPNTransister;
+
+  VPLUS - 1.r_led.2 - A.led.K - C.tr.E - GND;
+  IN - 1.r_base.2 - B.tr;
+}
