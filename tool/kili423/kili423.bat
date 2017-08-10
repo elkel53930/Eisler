@@ -1,1 +1,0 @@
-python kili423.py %*
