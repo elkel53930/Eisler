@@ -1,0 +1,62 @@
+# EESchema Netlist
+(
+  ( 0001 $noname CN1 CONN5{Lib=cn-main}
+    ( 1 VIN-main)
+    ( 2 LED1-main)
+    ( 3 LED2-main)
+    ( 4 LED3-main)
+    ( 5 GND-main)
+  )
+  ( 0002 $noname LD1 LED{Lib=led-l1-main}
+    ( 1 $$$00001)
+    ( 2 $$$00002)
+  )
+  ( 0003 $noname LD2 LED{Lib=led-l2-main}
+    ( 1 $$$00004)
+    ( 2 $$$00005)
+  )
+  ( 0004 $noname LD3 LED{Lib=led-l3-main}
+    ( 1 $$$00007)
+    ( 2 $$$00008)
+  )
+  ( 0005 $noname R1 R{Lib=r_led-l1-main}
+    ( 1 VIN-main)
+    ( 2 $$$00001)
+  )
+  ( 0006 $noname R2 R{Lib=r_base-l1-main}
+    ( 1 LED1-main)
+    ( 2 $$$00003)
+  )
+  ( 0007 $noname R3 R{Lib=r_led-l2-main}
+    ( 1 VIN-main)
+    ( 2 $$$00004)
+  )
+  ( 0008 $noname R4 R{Lib=r_base-l2-main}
+    ( 1 LED2-main)
+    ( 2 $$$00006)
+  )
+  ( 0009 $noname R5 R{Lib=r_led-l3-main}
+    ( 1 VIN-main)
+    ( 2 $$$00007)
+  )
+  ( 0010 $noname R6 R{Lib=r_base-l3-main}
+    ( 1 LED3-main)
+    ( 2 $$$00009)
+  )
+  ( 0011 $noname TR1 NPNTransister{Lib=tr-l1-main}
+    ( 1 GND-main)
+    ( 2 $$$00002)
+    ( 3 $$$00003)
+  )
+  ( 0012 $noname TR2 NPNTransister{Lib=tr-l2-main}
+    ( 1 GND-main)
+    ( 2 $$$00005)
+    ( 3 $$$00006)
+  )
+  ( 0013 $noname TR3 NPNTransister{Lib=tr-l3-main}
+    ( 1 GND-main)
+    ( 2 $$$00008)
+    ( 3 $$$00009)
+  )
+)
+*

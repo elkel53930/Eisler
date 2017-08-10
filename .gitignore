@@ -2,8 +2,6 @@
 *.o
 *.exe
 *.tmp
-*.net
-*.csv
 src/Eisler
 src/*.net
 src/*.eis

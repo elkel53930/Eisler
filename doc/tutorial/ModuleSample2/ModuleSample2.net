@@ -1,0 +1,16 @@
+# EESchema Netlist
+(
+  ( 0001 $noname CN1 CONN2{Lib=cn-main}
+    ( 1 P-sub-main)
+    ( 2 M-sub-main)
+  )
+  ( 0002 $noname LD1 LED{Lib=led-sub-main}
+    ( 1 $$$00001)
+    ( 2 M-sub-main)
+  )
+  ( 0003 $noname R1 R{Lib=r-sub-main}
+    ( 1 P-sub-main)
+    ( 2 $$$00001)
+  )
+)
+*

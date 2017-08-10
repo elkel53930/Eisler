@@ -1,0 +1,94 @@
+Cmp-Mod V01 Created by CvPcb (2013-07-07 BZR 4022)-stable date = 2017/08/10 17:08:46
+
+BeginCmp
+TimeStamp = 0001;
+Reference = CN1;
+ValeurCmp = CONN5{Lib=cn-main};
+IdModule  = PIN_ARRAY_5x1;
+EndCmp
+
+BeginCmp
+TimeStamp = 0002;
+Reference = LD1;
+ValeurCmp = LED{Lib=led-l1-main};
+IdModule  = LED-0603;
+EndCmp
+
+BeginCmp
+TimeStamp = 0003;
+Reference = LD2;
+ValeurCmp = LED{Lib=led-l2-main};
+IdModule  = LED-0603;
+EndCmp
+
+BeginCmp
+TimeStamp = 0004;
+Reference = LD3;
+ValeurCmp = LED{Lib=led-l3-main};
+IdModule  = LED-0603;
+EndCmp
+
+BeginCmp
+TimeStamp = 0005;
+Reference = R1;
+ValeurCmp = R{Lib=r_led-l1-main};
+IdModule  = SM0603;
+EndCmp
+
+BeginCmp
+TimeStamp = 0006;
+Reference = R2;
+ValeurCmp = R{Lib=r_base-l1-main};
+IdModule  = SM0603;
+EndCmp
+
+BeginCmp
+TimeStamp = 0007;
+Reference = R3;
+ValeurCmp = R{Lib=r_led-l2-main};
+IdModule  = SM0603;
+EndCmp
+
+BeginCmp
+TimeStamp = 0008;
+Reference = R4;
+ValeurCmp = R{Lib=r_base-l2-main};
+IdModule  = SM0603;
+EndCmp
+
+BeginCmp
+TimeStamp = 0009;
+Reference = R5;
+ValeurCmp = R{Lib=r_led-l3-main};
+IdModule  = SM0603;
+EndCmp
+
+BeginCmp
+TimeStamp = 0010;
+Reference = R6;
+ValeurCmp = R{Lib=r_base-l3-main};
+IdModule  = SM0603;
+EndCmp
+
+BeginCmp
+TimeStamp = 0011;
+Reference = TR1;
+ValeurCmp = NPNTransister{Lib=tr-l1-main};
+IdModule  = ;
+EndCmp
+
+BeginCmp
+TimeStamp = 0012;
+Reference = TR2;
+ValeurCmp = NPNTransister{Lib=tr-l2-main};
+IdModule  = ;
+EndCmp
+
+BeginCmp
+TimeStamp = 0013;
+Reference = TR3;
+ValeurCmp = NPNTransister{Lib=tr-l3-main};
+IdModule  = ;
+EndCmp
+
+EndListe
