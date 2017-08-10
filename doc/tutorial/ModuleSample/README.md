@@ -1,7 +1,7 @@
 # [.\ModuleSample.eis] Translation Summary
 
-* Time-stamp : 2017-08-09 21:37:42.1354707 +0900
-*  Git revision : develop_Tutorial@c11a17d15a6b6a4102d3707294c4dc0b50d5cc12 (Wed Aug 9 21:10:42 2017 +0900)
+* Time-stamp : 2017-08-10 11:58:36.7009612 +0900
+*  Git revision : master@113192b9846023f26b7f89b9335ecf886028fa2e (Fri Aug 4 16:30:26 2017 +0900)
 
 
 ## BOM
