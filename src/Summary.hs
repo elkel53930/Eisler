@@ -114,7 +114,7 @@ isConPort x = case x of
 showPart :: (Reference,CompIden,Maybe PartType) -> Markdown
 showPart (r,c,pt) = concat
   [ "|", r
-  , "|", atmark $ getToken c
+  , "|", getToken c
   , "|", case pt of
     Nothing -> ""
     Just t  -> getToken t
@@ -135,7 +135,7 @@ netsInformation =
 
 showNet :: Net -> Markdown
 showNet net = concat
-  [ "|", atmark $ getToken wire
+  [ "|", getToken wire
   , "|", showConnectables set
   , "|\n"
   ] where
@@ -152,11 +152,8 @@ showConnectables =
 
 showConnectable :: Connectable -> Markdown
 showConnectable (ConPort c _ po _ _ _) = concat
-  [ atmark $ getToken c
+  [ getToken c
   , " . "
   , getToken po
   ]
 showConnectable _ = ""
-
-atmark :: String -> String
-atmark = replace '-' '@'

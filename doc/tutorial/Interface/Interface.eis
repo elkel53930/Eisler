@@ -1,0 +1,21 @@
+defpart R(1:1 2:2){ref "R";}
+defpart NchFET(1:G 2:S 3:D){ref "Q";}
+defpart LED(1:A 2:K){ref "LD";}
+defpart CONN3(1:1 2:2 3:3){ref "CN";}
+
+defmodule main()
+{
+  part pulldownR "10k 5% 1608" as R;
+  part r_led "330 5% 1608" as R;
+  part led "BR1111C" as LED;
+  part fet "BSS138" as NchFET;
+  part cn "PSS-410153-03" as CONN3;
+
+  wire VIN, GND, SIGNAL;
+  interface PULLDOWN;
+
+  GND - 1.pulldownR.2 - PULLDOWN;
+
+  VIN - 1.r_led.2 - A.led.K - D.fet.S - GND;
+  SIGNAL - PULLDOWN - G.fet;
+}

@@ -1,0 +1,24 @@
+defpart R(1:1 2:2){ref "R";}
+defpart LED(1:A 2:K){ref "LD";}
+defpart CONN2(1:1 2:2){ref "CN";}
+
+defmodule SubModule(1:VPLUS 2:VMINUS)
+{
+  part r "330 5% 1608" as R;
+  part led "BR1111C" as LED;
+
+  wire P, M;
+
+  VPLUS - P;
+  VMINUS - M;
+
+  P - 1.r.2 - A.led.K - M;
+}
+
+defmodule main()
+{
+  part cn "PSS-410153-05" as CONN2;
+  module sub as SubModule;
+
+  cn.1 - VPLUS.sub.VMINUS - 2.cn;
+}
