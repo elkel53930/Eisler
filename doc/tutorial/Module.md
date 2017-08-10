@@ -100,3 +100,70 @@ defmodule Module(1:VIN 2:VCC ...)
 
 モジュールを宣言するときには再帰的な宣言にならないよう注意しましょう。
 あるモジュールの中で、そのモジュールそのものや、そのモジュールを使用している別のモジュールを宣言することはできません。
+
+### モジュール内のワイヤについて
+
+異なる名前のワイヤ同士を結線できないことは先に説明しました。
+そして、最初のサンプルの際、mainモジュールの中で宣言されたGNDというワイヤがネットリストに「GND-main」というネット名で現れることも見てきました。
+
+ではmain以外のモジュール内で宣言されたワイヤはどう扱われるのでしょうか。
+以下の例(ModuleSample2.eis)で試してみましょう。
+
+```ModuleSample2.eis
+defpart R(1:1 2:2){ref "R";}
+defpart LED(1:A 2:K){ref "LD";}
+defpart CONN2(1:1 2:2){ref "CN";}
+
+defmodule SubModule(1:VPLUS 2:VMINUS)
+{
+  part r "330 5% 1608" as R;
+  part led "BR1111C" as LED;
+
+  wire P, M;
+
+  VPLUS - P;
+  VMINUS - M;
+
+  P - 1.r.2 - A.led.K - M;
+}
+
+defmodule main()
+{
+  part cn "PSS-410153-05" as CONN2;
+  module sub as SubModule;
+
+  cn.1 - VPLUS.sub.VMINUS - 2.cn;
+}
+```
+
+`ket ModuleSample2.eis`を実行し、README.mdを確認します。
+「Nets information」を見ると、Eislerが自動で名付けた`$$$00001`のほかに、`M-sub-main`と`P-sub-main`というネットがあります。
+
+そう、ワイヤ名の後ろにどこで宣言されているかという情報が付与されてネット名になっているのです。
+`M-sub-main`は、mainモジュールの中で宣言された`sub`というモジュールの中にある`M`というワイヤを意味します。
+
+異なる名前のワイヤ同士を結線することはできません。
+では、モジュール内の名前は同じだけど、モジュールのインスタンスが異なるワイヤ同士はどうでしょうか。
+mainモジュールを次のように書き換えてください。
+
+```
+defmodule main()
+{
+  part cn "PSS-410153-05" as CONN2;
+  module sub1 as SubModule;
+  module sub2 as SubModule;
+
+  cn.1 - VPLUS.sub1.VMINUS - 2.cn;
+  cn.1 - VPLUS.sub2.VMINUS - 2.cn;
+}
+```
+
+`ket ModuleSample2.eis`を実行すると次のようなエラーが表示されます。
+
+```
+"ModuleSample2.eis" (line 15, column 25)
+        Connection between different wires. 'M-sub2-main' and 'M-sub1-main'.
+```
+
+「`M-sub1-main`と`M-sub2-main`という異なるワイヤ同士を繋いでるよ！」というエラーです。
+つまり、モジュール内の名前は同じだけど、モジュールのインスタンスが異なるワイヤは、別のワイヤとして処理されるのです。
